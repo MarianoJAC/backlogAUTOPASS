@@ -110,26 +110,32 @@
   td[contenteditable=true]:focus{outline:2px solid var(--acc);background:#0d1526;border-radius:6px}
 
   /* row columns */
-  .rowops{width:38px;text-align:center;padding:0!important}
+  .rowops{width:62px;text-align:center;padding:0!important}
   .rowops button{
     background:none;border:none;color:var(--faint);cursor:pointer;font-size:15px;line-height:1;
     opacity:0;transition:.15s;padding:4px;
   }
+  .rowops button + button{margin-left:2px}
   tr:hover .rowops button{opacity:1}
   .rowops button:hover{color:var(--bad)}
+  .rowops button.add{font-weight:800;font-size:16px}
+  .rowops button.add:hover{color:var(--ok)}
   .tipo-cell{width:36px;text-align:center;font-weight:800;font-size:11px;letter-spacing:.5px}
   .tipo-cell[data-val="H"]{color:var(--h)}
   .tipo-cell[data-val="T"]{color:var(--t)}
   .tipo-cell[data-val="F"]{color:var(--f)}
   td[data-key="id"]{font-family:Consolas,monospace;font-weight:700;color:var(--acc);white-space:nowrap}
   td[data-key="desc"]{min-width:300px;line-height:1.45}
-  td[data-key="mvp"]{font-weight:700;white-space:nowrap}
+  td[data-key="mvp"]{font-weight:700;white-space:nowrap;position:relative}
   td[data-key="mvp"][data-val^="MVP 1"]{color:#38bdf8}
   td[data-key="mvp"][data-val^="MVP 2"]{color:var(--f)}
   td[data-key="mvp"][data-val^="MVP 3"]{color:var(--warn)}
   td[data-key="mvp"][data-val^="MVP 4"]{color:var(--bad)}
-  td[data-key="estado"]{font-weight:700;white-space:nowrap}
-  td[data-key="estado"]::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;background:var(--ec,#5b6882);vertical-align:1px}
+  td[data-key="estado"]{font-weight:700;white-space:nowrap;position:relative;padding-left:24px}
+  td[data-key="estado"]::before{
+    content:"";position:absolute;left:10px;top:50%;transform:translateY(-50%);
+    width:8px;height:8px;border-radius:50%;background:var(--ec,#5b6882);
+  }
   td[data-key="estado"][data-val="CERRADA"]{color:var(--ok)}
   td[data-key="estado"][data-val="CERRADA"]::before{background:var(--ok);box-shadow:0 0 0 3px rgba(52,211,153,.15)}
   td[data-key="estado"][data-val="EN CURSO"]{color:var(--warn)}
@@ -143,6 +149,28 @@
   }
   td[data-key="finicio"],td[data-key="ffin"]{font-family:Consolas,monospace;color:var(--mut);white-space:nowrap;font-size:12px}
   td[data-key="obs"]{min-width:200px;color:var(--mut);line-height:1.4;font-size:12px}
+
+  td[data-key] input.cellsel{
+    width:100%;min-width:0;background:transparent;border:none;outline:none;
+    color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;
+    padding:6px 0;margin:0;
+  }
+  td[data-key="tipo"] input.cellsel{text-align:center}
+  td[data-key] input.cellsel:focus{box-shadow:0 0 0 2px rgba(91,157,255,.22);border-radius:6px}
+  td[data-key="mvp"] input.cellsel,td[data-key="estado"] input.cellsel,td[data-key="responsable"] input.cellsel{padding:6px 18px 6px 0}
+  td[data-key="mvp"] .caret,td[data-key="estado"] .caret,td[data-key="responsable"] .caret{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    font-size:26px;color:var(--acc);pointer-events:none;line-height:1;
+  }
+  .combo{
+    position:fixed;display:none;z-index:100;background:var(--panel3);border:1px solid var(--line2);
+    border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.45);min-width:180px;max-width:320px;
+    max-height:260px;overflow:auto;padding:4px;
+  }
+  .combo .opt{padding:7px 10px;font-size:13px;color:var(--txt);cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:8px}
+  .combo .opt:hover{background:rgba(91,157,255,.15)}
+  .combo .opt.sel{background:rgba(91,157,255,.2);color:var(--acc);font-weight:700}
+  .combo .opt .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
 
   /* sections */
   tr.section td{
@@ -243,6 +271,7 @@
   </section>
 </div>
 <div class="toast" id="toast"><span class="ok">✓</span><span id="toastMsg"></span></div>
+<div id="comboPanel" class="combo"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
@@ -282,8 +311,107 @@ const $ = s => document.querySelector(s);
 let rows = [];
 let filters = {q:"", tipo:"", mvp:"", estado:"", resp:""};
 let saveTimer = null;
+let focusEnt = null;
 
 const RESP_COLORS = ["#38bdf8","#a78bfa","#f472b6","#fbbf24","#34d399","#fb7185","#60a5fa","#c084fc","#2dd4bf","#f97316"];
+
+const CELL_OPTS = {
+  tipo: ["H","T","F"],
+  mvp: ["MVP 1","MVP 2","MVP 3","MVP 4"],
+  estado: ["CERRADA","EN CURSO","PENDIENTE"],
+  responsable: []
+};
+const CELL_KEYS = ["tipo","mvp","estado","responsable"];
+
+function collectOptions(k){
+  const set = new Set(CELL_OPTS[k] || []);
+  rows.forEach(r => {
+    if(r.kind === "row" && r[k]) set.add(r[k]);
+  });
+  return [...set].sort();
+}
+function refreshOptions(){
+  fillFilters();
+}
+function ensureOption(k, v){
+  if(!v || !CELL_KEYS.includes(k)) return;
+  if(collectOptions(k).indexOf(v) < 0){
+    CELL_OPTS[k].push(v);
+    refreshOptions();
+  }
+}
+
+const comboPanel = document.getElementById("comboPanel");
+let combo = null;
+
+function comboDotColor(k, v){
+  if(k === "estado") return v==="CERRADA"?"#34d399":v==="EN CURSO"?"#fbbf24":v==="PENDIENTE"?"#fb7185":"#5b6882";
+  if(k === "responsable") return respColor(v);
+  return null;
+}
+function renderCombo(filter){
+  comboPanel.innerHTML = "";
+  combo.q = (filter||"").toLowerCase();
+  const q = combo.q;
+  let shown = 0;
+  collectOptions(combo.k).forEach(v => {
+    if(q && v.toLowerCase().indexOf(q) < 0) return;
+    shown++;
+    const d = document.createElement("div");
+    d.className = "opt";
+    if(!q && v === combo.inp.value) d.className += " sel";
+    const c = comboDotColor(combo.k, v);
+    if(c){
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = c;
+      d.appendChild(dot);
+    }
+    d.appendChild(document.createTextNode(v));
+    d.addEventListener("mousedown", e => { e.preventDefault(); pickOption(v); });
+    comboPanel.appendChild(d);
+  });
+  if(!shown){
+    const empty = document.createElement("div");
+    empty.className = "opt";
+    empty.textContent = "Sin coincidencias…";
+    empty.style.color = "var(--faint)";
+    comboPanel.appendChild(empty);
+  }
+}
+function openCombo(inp, k){
+  combo = {inp, k, q:""};
+  const r = inp.getBoundingClientRect();
+  comboPanel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 220)) + "px";
+  comboPanel.style.display = "block";
+  renderCombo("");
+  const ph = comboPanel.offsetHeight;
+  if(r.bottom + 3 + ph > window.innerHeight && r.top - ph > 8){
+    comboPanel.style.top = (r.top - ph - 3) + "px";
+  } else {
+    comboPanel.style.top = (r.bottom + 3) + "px";
+  }
+}
+function closeCombo(){
+  if(!combo) return;
+  combo = null;
+  comboPanel.style.display = "none";
+}
+function pickOption(v){
+  if(!combo) return;
+  const inp = combo.inp;
+  inp.value = v;
+  inp.dispatchEvent(new Event("input"));
+  closeCombo();
+  inp.focus();
+}
+document.addEventListener("click", e => {
+  if(!combo) return;
+  if(comboPanel.contains(e.target)) return;
+  const td = combo.inp ? combo.inp.closest("td") : null;
+  if(e.target === combo.inp || (td && e.target.closest && e.target.closest("td") === td)) return;
+  closeCombo();
+});
 
 function clone(x){ return JSON.parse(JSON.stringify(x)); }
 function saveToDb(data){
@@ -394,6 +522,19 @@ function mkRow(ent){
 
   const ops = document.createElement("td");
   ops.className = "rowops";
+  const add = document.createElement("button");
+  add.className = "add";
+  add.textContent = "+";
+  add.title = "Agregar fila debajo";
+  add.addEventListener("click", e => {
+    e.stopPropagation();
+    const idx = rows.indexOf(ent);
+    const nw = {kind:"row", tipo:"T", id:"", desc:"", mvp:"MVP 1", estado:"PENDIENTE", responsable:"", finicio:"", ffin:"", obs:""};
+    rows.splice(idx + 1, 0, nw);
+    focusEnt = nw;
+    persist(); render();
+  });
+  ops.appendChild(add);
   const del = document.createElement("button");
   del.textContent = "✕";
   del.title = "Eliminar fila";
@@ -411,14 +552,30 @@ function mkRow(ent){
     const td = document.createElement("td");
     if(k === "tipo") td.className = "tipo-cell";
     td.dataset.key = k;
-    cell(td);
+    if(CELL_KEYS.includes(k)){
+      const inp = document.createElement("input");
+      inp.className = "cellsel";
+      inp.spellcheck = false;
+      inp.autocomplete = "off";
+      td.appendChild(inp);
+      if(k !== "tipo"){
+        const caret = document.createElement("span");
+        caret.className = "caret";
+        caret.textContent = "▾";
+        td.appendChild(caret);
+      }
+    } else {
+      cell(td);
+    }
     tr.appendChild(td);
   });
   return tr;
 }
 
 function renderCell(td, ent, k){
-  td.textContent = ent[k] || "";
+  const inp = td.querySelector("input.cellsel");
+  if(inp) inp.value = ent[k] || "";
+  else td.textContent = ent[k] || "";
   td.dataset.val = ent[k] || "";
   if(k === "estado"){
     const c = ent[k]==="CERRADA" ? "#34d399" : ent[k]==="EN CURSO" ? "#fbbf24" : ent[k]==="PENDIENTE" ? "#fb7185" : "#5b6882";
@@ -447,18 +604,52 @@ function build(){
     order.forEach((k,i) => {
       const td = tds[i];
       renderCell(td, ent, k);
-      td.addEventListener("input", () => {
-        const v = td.textContent.trim();
-        ent[k] = v;
-        td.dataset.val = v;
-        if(k==="tipo") td.dataset.tipo = v;
-        if(k==="estado") td.style.setProperty("--ec", v==="CERRADA"?"#34d399":v==="EN CURSO"?"#fbbf24":v==="PENDIENTE"?"#fb7185":"#5b6882");
-        if(k==="responsable") td.style.setProperty("--rc", respColor(v));
-        persist();
-      });
+      const inp = td.querySelector("input.cellsel");
+      if(inp){
+        inp.addEventListener("input", () => {
+          const v = inp.value.trim();
+          ent[k] = v;
+          td.dataset.val = v;
+          if(k==="tipo") td.dataset.tipo = v;
+          if(k==="estado") td.style.setProperty("--ec", v==="CERRADA"?"#34d399":v==="EN CURSO"?"#fbbf24":v==="PENDIENTE"?"#fb7185":"#5b6882");
+          if(k==="responsable") td.style.setProperty("--rc", respColor(v));
+          persist();
+          if(combo && combo.inp === inp) renderCombo(v);
+        });
+        inp.addEventListener("change", () => {
+          ensureOption(k, inp.value.trim());
+        });
+        inp.addEventListener("focus", () => openCombo(inp, k));
+        inp.addEventListener("click", () => openCombo(inp, k));
+        td.addEventListener("click", () => openCombo(inp, k));
+        inp.addEventListener("keydown", e => {
+          if(e.key === "Escape") closeCombo();
+          if(e.key === "Enter" && combo){
+            e.preventDefault();
+            if(combo.q){
+              const el = comboPanel.querySelector(".opt");
+              if(el) pickOption(el.textContent);
+            } else {
+              closeCombo();
+            }
+          }
+        });
+      } else {
+        td.addEventListener("input", () => {
+          const v = td.textContent.trim();
+          ent[k] = v;
+          td.dataset.val = v;
+          persist();
+        });
+      }
     });
+    if(ent === focusEnt){
+      const td = tr.querySelector('td[data-key="desc"]');
+      if(td) td.focus();
+      focusEnt = null;
+    }
   });
-  fillFilters();
+  refreshOptions();
 }
 
 function applyFilters(){
@@ -493,19 +684,13 @@ function applyFilters(){
 }
 
 function fillFilters(){
-  const mvp = new Set(), est = new Set(), resp = new Set();
-  rows.forEach(r => {
-    if(r.kind !== "row") return;
-    if(r.mvp) mvp.add(r.mvp);
-    if(r.estado) est.add(r.estado);
-    if(r.responsable) resp.add(r.responsable);
-  });
-  fillSel($("#fMvp"), mvp, filters.mvp);
-  fillSel($("#fEstado"), est, filters.estado);
-  fillSel($("#fResp"), resp, filters.resp);
+  fillSel($("#fTipo"), new Set(collectOptions("tipo")), filters.tipo);
+  fillSel($("#fMvp"), new Set(collectOptions("mvp")), filters.mvp);
+  fillSel($("#fEstado"), new Set(collectOptions("estado")), filters.estado);
+  fillSel($("#fResp"), new Set(collectOptions("responsable")), filters.resp);
 }
 function fillSel(sel, set, keep){
-  const labels = {fMvp:"MVP: todos", fEstado:"Estado: todos", fResp:"Responsable: todos"};
+  const labels = {fTipo:"Tipo: todos", fMvp:"MVP: todos", fEstado:"Estado: todos", fResp:"Responsable: todos"};
   sel.innerHTML = '<option value="">'+labels[sel.id]+'</option>';
   [...set].sort().forEach(v => {
     const o = document.createElement("option");
