@@ -104,11 +104,16 @@
   .revlist{overflow:auto;padding:12px 16px}
   .revhint{font-size:12px;color:var(--faint);margin:0 0 10px;line-height:1.4}
   .revitem{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    display:flex;flex-direction:column;align-items:stretch;gap:8px;
     background:var(--panel2);border:1px solid var(--line);border-radius:10px;
     padding:10px 12px;margin-bottom:8px;
   }
+  .revitem .btn{align-self:flex-end}
   .revmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px}
+  .revchanges{margin-top:2px;border-top:1px dashed var(--line);padding-top:7px}
+  .revchg{font-size:11.5px;color:var(--mut);line-height:1.5;word-break:break-word}
+  .revchg.init,.revchg.none{color:var(--faint);font-style:italic}
+  .revchg.more{color:var(--acc)}
   .revdate{font-family:Consolas,monospace;color:var(--txt);font-weight:700}
   .revauthor{color:var(--acc);font-weight:600}
   .revcount{color:var(--mut)}
@@ -349,7 +354,7 @@
       <button class="x" id="revClose" title="Cerrar">✕</button>
     </div>
     <div class="revlist">
-      <p class="revhint">Se guarda una copia automática del backlog unos segundos después de cada cambio. Se conservan las últimas 40 revisiones. Elegí una y presioná "Restaurar" para volver a esa versión.</p>
+      <p class="revhint">Se guarda una copia automática del backlog unos segundos después de cada cambio. Se conservan las últimas 40 revisiones y se muestran las diferencias con la anterior. Elegí una y presioná "Restaurar" para volver a esa versión. Fechas en hora de Buenos Aires.</p>
       <div id="revList"></div>
     </div>
   </div>
@@ -630,8 +635,51 @@ function loadRevisions(cb){
   }
 }
 function revDate(ts){
-  try{ return new Date(ts).toLocaleString("es-AR"); }
+  try{ return new Date(ts).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" }); }
   catch(e){ return String(ts||""); }
+}
+function entKey(e, i){
+  if(e.kind === "section") return "S:" + (e.text || "");
+  return "R:" + (e.id || ((e.tipo || "") + "-" + i));
+}
+function labelOf(e){
+  if(!e) return "Item";
+  if(e.kind === "section") return "Sección \"" + (e.text || "") + "\"";
+  const id = (e.id || "").trim();
+  const desc = (e.desc || "").trim();
+  if(id) return id;
+  if(desc) return desc.length > 40 ? desc.slice(0, 40) + "…" : desc;
+  return "Item";
+}
+function diffRevs(a, b){
+  a = a || []; b = b || [];
+  const A = {}, B = {};
+  a.forEach((e, i) => { const k = entKey(e, i); (A[k] = A[k] || []).push(e); });
+  b.forEach((e, i) => { const k = entKey(e, i); (B[k] = B[k] || []).push(e); });
+  const out = [];
+  Object.keys(A).forEach(k => {
+    if(!B[k]) out.push("Eliminada: " + labelOf(A[k][0]));
+  });
+  Object.keys(B).forEach(k => {
+    if(!A[k]) out.push("Agregada: " + labelOf(B[k][0]));
+  });
+  Object.keys(B).forEach(k => {
+    if(A[k]){
+      const ea = A[k][0], eb = B[k][0];
+      if(eb.kind === "section"){
+        if((ea.text || "") !== (eb.text || "")){
+          out.push("Sección renombrada: \"" + (ea.text || "") + "\" → \"" + (eb.text || "") + "\"");
+        }
+      } else {
+        const fields = ["tipo","id","desc","mvp","estado","responsable","finicio","ffin","obs"];
+        const changed = fields.filter(f => (ea[f] || "") !== (eb[f] || ""));
+        if(changed.length){
+          out.push(labelOf(eb) + ": " + changed.map(f => f + " \"" + (ea[f] || "") + "\" → \"" + (eb[f] || "") + "\"").join(", "));
+        }
+      }
+    }
+  });
+  return out;
 }
 function openRevisions(){
   $("#revModal").classList.add("show");
@@ -658,13 +706,41 @@ function openRevisions(){
       c.className = "revcount";
       c.textContent = (rev.count || revRowCount(rev.data)) + " items";
       meta.appendChild(d); meta.appendChild(a); meta.appendChild(c);
+      const changes = i < revs.length - 1 ? diffRevs(revs[i + 1].data, rev.data) : diffRevs(null, rev.data);
+      const cdiv = document.createElement("div");
+      cdiv.className = "revchanges";
+      if(i === revs.length - 1){
+        const s = document.createElement("div");
+        s.className = "revchg init";
+        s.textContent = "Revisión inicial";
+        cdiv.appendChild(s);
+      } else if(!changes.length){
+        const s = document.createElement("div");
+        s.className = "revchg none";
+        s.textContent = "Sin cambios detectados";
+        cdiv.appendChild(s);
+      } else {
+        changes.slice(0, 5).forEach(ch => {
+          const s = document.createElement("div");
+          s.className = "revchg";
+          s.textContent = ch;
+          cdiv.appendChild(s);
+        });
+        if(changes.length > 5){
+          const s = document.createElement("div");
+          s.className = "revchg more";
+          s.textContent = "+" + (changes.length - 5) + " cambios más";
+          cdiv.appendChild(s);
+        }
+      }
+      item.appendChild(meta); item.appendChild(cdiv);
       const btn = document.createElement("button");
       btn.className = "btn";
       btn.textContent = "Restaurar";
       btn.disabled = !canEdit;
       if(!canEdit) btn.title = "Ingresá para poder restaurar";
       btn.addEventListener("click", () => restoreRevision(rev, i));
-      item.appendChild(meta); item.appendChild(btn);
+      item.appendChild(btn);
       list.appendChild(item);
     });
   });
