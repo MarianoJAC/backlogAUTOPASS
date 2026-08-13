@@ -1143,19 +1143,22 @@ function setAllCollapsed(state){
   const tb = $("#tbody");
   tb.querySelectorAll("tr").forEach(tr => {
     if(tr.classList.contains("section")){
+      tr.classList.toggle("collapsed", false);
+    } else if(tr.classList.contains("parent")){
+      tr.classList.remove("row-sect-hidden");
       tr.classList.toggle("collapsed", state);
     } else {
+      tr.classList.remove("row-sect-hidden");
       tr.classList.toggle("child-hidden", state);
-      tr.classList.toggle("row-sect-hidden", state);
-      if(tr.classList.contains("parent")) tr.classList.toggle("collapsed", state);
     }
   });
-  const anyCollapsed = [...tb.querySelectorAll("tr.parent,tr.section")].some(t => t.classList.contains("collapsed"));
+  applyFilters();
+  const anyCollapsed = [...tb.querySelectorAll("tr.parent")].some(t => t.classList.contains("collapsed"));
   $("#toggleAllLbl").textContent = anyCollapsed ? "Expandir todo" : "Contraer todo";
 }
 $("#toggleAll").addEventListener("click", () => {
   const tb = $("#tbody");
-  const anyCollapsed = [...tb.querySelectorAll("tr.parent,tr.section")].some(t => t.classList.contains("collapsed"));
+  const anyCollapsed = [...tb.querySelectorAll("tr.parent")].some(t => t.classList.contains("collapsed"));
   setAllCollapsed(!anyCollapsed);
 });
 
