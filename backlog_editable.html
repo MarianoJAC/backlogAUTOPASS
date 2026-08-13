@@ -205,6 +205,15 @@
   .rowops button:hover{color:var(--bad)}
   .rowops button.add{font-weight:800;font-size:16px}
   .rowops button.add:hover{color:var(--ok)}
+
+  /* agrupar tareas bajo historias/funcionalidades */
+  .rowops .gtoggle{
+    background:none;border:none;color:var(--dorado);cursor:pointer;font-size:11px;line-height:1;
+    padding:4px;opacity:1;transition:transform .18s,color .15s;
+  }
+  .rowops .gtoggle:hover{color:var(--dorado-hover)}
+  tr.parent.collapsed .gtoggle{transform:rotate(-90deg)}
+  tr.child-hidden{display:none}
   .tipo-cell{width:36px;text-align:center;font-weight:800;font-size:11px;letter-spacing:.5px}
   .tipo-cell[data-val="H"]{color:var(--h)}
   .tipo-cell[data-val="T"]{color:var(--t)}
@@ -792,6 +801,17 @@ function sectionCount(idx){
   return c;
 }
 
+function rowHasChildren(ent){
+  const i = rows.indexOf(ent);
+  for(let j=i+1; j<rows.length; j++){
+    const r = rows[j];
+    if(r.kind === "section") return false;
+    if(r.kind === "row" && (r.tipo === "H" || r.tipo === "F")) return false;
+    if(r.kind === "row" && r.tipo === "T") return true;
+  }
+  return false;
+}
+
 function mkRow(ent){
   const tr = document.createElement("tr");
   if(ent.kind === "section"){
@@ -837,6 +857,30 @@ function mkRow(ent){
 
   const ops = document.createElement("td");
   ops.className = "rowops";
+  const isParent = (ent.kind === "row" && (ent.tipo === "H" || ent.tipo === "F"));
+  if(isParent && rowHasChildren(ent)){
+    tr.classList.add("parent");
+    const tg = document.createElement("button");
+    tg.className = "gtoggle";
+    tg.textContent = "▼";
+    tg.title = "Desplegar/plegar las tareas de esta historia";
+    tg.addEventListener("click", e => {
+      e.stopPropagation();
+      let n = tr.nextElementSibling;
+      let anyShown = false;
+      while(n && !n.classList.contains("section") && !n.classList.contains("parent")){
+        if(!n.classList.contains("child-hidden")){ anyShown = true; break; }
+        n = n.nextElementSibling;
+      }
+      n = tr.nextElementSibling;
+      while(n && !n.classList.contains("section") && !n.classList.contains("parent")){
+        n.classList.toggle("child-hidden", anyShown);
+        n = n.nextElementSibling;
+      }
+      tr.classList.toggle("collapsed", anyShown);
+    });
+    ops.appendChild(tg);
+  }
   if(canEdit){
     const add = document.createElement("button");
     add.className = "add";
@@ -971,6 +1015,14 @@ function build(){
     }
   });
   refreshOptions();
+  tb.querySelectorAll("tr.parent").forEach(p => {
+    p.classList.add("collapsed");
+    let n = p.nextElementSibling;
+    while(n && !n.classList.contains("section") && !n.classList.contains("parent")){
+      n.classList.add("child-hidden");
+      n = n.nextElementSibling;
+    }
+  });
 }
 
 function applyFilters(){
