@@ -243,9 +243,10 @@
   td[data-key="tipo"] input.cellsel{text-align:center}
   td[data-key] input.cellsel:focus{box-shadow:0 0 0 2px var(--dorado-glow);border-radius:6px}
   td[data-key="mvp"] input.cellsel,td[data-key="estado"] input.cellsel,td[data-key="responsable"] input.cellsel{padding:6px 18px 6px 0}
+  td[data-key="mvp"],td[data-key="estado"],td[data-key="responsable"]{cursor:pointer}
   td[data-key="mvp"] .caret,td[data-key="estado"] .caret,td[data-key="responsable"] .caret{
     position:absolute;right:6px;top:50%;transform:translateY(-50%);
-    font-size:26px;color:var(--acc);pointer-events:none;line-height:1;
+    font-size:26px;color:var(--acc);pointer-events:none;line-height:1;cursor:pointer;
   }
   .combo{
     position:fixed;display:none;z-index:100;background:var(--panel3);border:1px solid var(--line2);
