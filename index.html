@@ -334,6 +334,10 @@
     <select id="fMvp"><option value="">MVP: todos</option></select>
     <select id="fEstado"><option value="">Estado: todos</option></select>
     <select id="fResp"><option value="">Responsable: todos</option></select>
+    <button class="btn" id="toggleAll" title="Desplegar o plegar todas las historias de una vez">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9l8-6 8 6M4 15l8 6 8-6"/></svg>
+      <span id="toggleAllLbl">Contraer todo</span>
+    </button>
     <div class="spacer"></div>
     <button class="btn prim" id="addRow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1134,6 +1138,26 @@ function render(){
   applyFilters();
   updateStats();
 }
+
+function setAllCollapsed(state){
+  const tb = $("#tbody");
+  tb.querySelectorAll("tr").forEach(tr => {
+    if(tr.classList.contains("section")){
+      tr.classList.toggle("collapsed", state);
+    } else {
+      tr.classList.toggle("child-hidden", state);
+      tr.classList.toggle("row-sect-hidden", state);
+      if(tr.classList.contains("parent")) tr.classList.toggle("collapsed", state);
+    }
+  });
+  const anyCollapsed = [...tb.querySelectorAll("tr.parent,tr.section")].some(t => t.classList.contains("collapsed"));
+  $("#toggleAllLbl").textContent = anyCollapsed ? "Expandir todo" : "Contraer todo";
+}
+$("#toggleAll").addEventListener("click", () => {
+  const tb = $("#tbody");
+  const anyCollapsed = [...tb.querySelectorAll("tr.parent,tr.section")].some(t => t.classList.contains("collapsed"));
+  setAllCollapsed(!anyCollapsed);
+});
 
 $("#q").addEventListener("input", e => { filters.q = e.target.value; applyFilters(); });
 $("#fTipo").addEventListener("change", e => { filters.tipo = e.target.value; applyFilters(); });
