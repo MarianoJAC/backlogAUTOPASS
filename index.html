@@ -205,16 +205,6 @@
   .rowops button:hover{color:var(--bad)}
   .rowops button.add{font-weight:800;font-size:16px}
   .rowops button.add:hover{color:var(--ok)}
-
-  /* grouping de tareas bajo historias/funcionalidades */
-  tbody tr.parent td{box-shadow:inset 3px 0 0 var(--dorado)}
-  tr.parent .gtoggle{
-    background:none;border:none;color:var(--dorado);cursor:pointer;font-size:11px;line-height:1;
-    padding:4px;opacity:1;transition:transform .18s,color .15s;
-  }
-  tr.parent .gtoggle:hover{color:var(--dorado-hover)}
-  tr.parent.collapsed .gtoggle{transform:rotate(-90deg)}
-  tr.child-hidden{display:none}
   .tipo-cell{width:36px;text-align:center;font-weight:800;font-size:11px;letter-spacing:.5px}
   .tipo-cell[data-val="H"]{color:var(--h)}
   .tipo-cell[data-val="T"]{color:var(--t)}
@@ -334,10 +324,6 @@
     <select id="fMvp"><option value="">MVP: todos</option></select>
     <select id="fEstado"><option value="">Estado: todos</option></select>
     <select id="fResp"><option value="">Responsable: todos</option></select>
-    <button class="btn" id="toggleAll" title="Desplegar o plegar todas las historias de una vez">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9l8-6 8 6M4 15l8 6 8-6"/></svg>
-      <span id="toggleAllLbl">Contraer todo</span>
-    </button>
     <div class="spacer"></div>
     <button class="btn prim" id="addRow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -806,17 +792,6 @@ function sectionCount(idx){
   return c;
 }
 
-function rowHasChildren(ent){
-  const i = rows.indexOf(ent);
-  for(let j=i+1; j<rows.length; j++){
-    const r = rows[j];
-    if(r.kind === "section") return false;
-    if(r.kind === "row" && (r.tipo === "H" || r.tipo === "F")) return false;
-    if(r.kind === "row" && r.tipo === "T") return true;
-  }
-  return false;
-}
-
 function mkRow(ent){
   const tr = document.createElement("tr");
   if(ent.kind === "section"){
@@ -862,30 +837,6 @@ function mkRow(ent){
 
   const ops = document.createElement("td");
   ops.className = "rowops";
-  const isParent = (ent.kind === "row" && (ent.tipo === "H" || ent.tipo === "F"));
-  if(isParent && rowHasChildren(ent)){
-    tr.classList.add("parent");
-    const tg = document.createElement("button");
-    tg.className = "gtoggle";
-    tg.textContent = "▼";
-    tg.title = "Plegar/desplegar tareas";
-    tg.addEventListener("click", e => {
-      e.stopPropagation();
-      let n = tr.nextElementSibling;
-      let anyShown = false;
-      while(n && !n.classList.contains("section") && !n.classList.contains("parent")){
-        if(!n.classList.contains("child-hidden")){ anyShown = true; break; }
-        n = n.nextElementSibling;
-      }
-      n = tr.nextElementSibling;
-      while(n && !n.classList.contains("section") && !n.classList.contains("parent")){
-        n.classList.toggle("child-hidden", anyShown);
-        n = n.nextElementSibling;
-      }
-      tr.classList.toggle("collapsed", anyShown);
-    });
-    ops.appendChild(tg);
-  }
   if(canEdit){
     const add = document.createElement("button");
     add.className = "add";
@@ -1138,29 +1089,6 @@ function render(){
   applyFilters();
   updateStats();
 }
-
-function setAllCollapsed(state){
-  const tb = $("#tbody");
-  tb.querySelectorAll("tr").forEach(tr => {
-    if(tr.classList.contains("section")){
-      tr.classList.toggle("collapsed", false);
-    } else if(tr.classList.contains("parent")){
-      tr.classList.remove("row-sect-hidden");
-      tr.classList.toggle("collapsed", state);
-    } else {
-      tr.classList.remove("row-sect-hidden");
-      tr.classList.toggle("child-hidden", state);
-    }
-  });
-  applyFilters();
-  const anyCollapsed = [...tb.querySelectorAll("tr.parent")].some(t => t.classList.contains("collapsed"));
-  $("#toggleAllLbl").textContent = anyCollapsed ? "Expandir todo" : "Contraer todo";
-}
-$("#toggleAll").addEventListener("click", () => {
-  const tb = $("#tbody");
-  const anyCollapsed = [...tb.querySelectorAll("tr.parent")].some(t => t.classList.contains("collapsed"));
-  setAllCollapsed(!anyCollapsed);
-});
 
 $("#q").addEventListener("input", e => { filters.q = e.target.value; applyFilters(); });
 $("#fTipo").addEventListener("change", e => { filters.tipo = e.target.value; applyFilters(); });
