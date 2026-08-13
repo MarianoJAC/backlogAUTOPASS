@@ -75,6 +75,71 @@
   .btn.prim{background:var(--grad);border:none;color:#05121f}
   .btn.prim:hover{box-shadow:0 6px 18px rgba(34,211,170,.35)}
   .btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+  .toolbar .op{
+    background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:9px;padding:9px 10px;font-size:12.5px;outline:none;transition:.15s;width:120px;
+  }
+  .toolbar .op::placeholder{color:var(--faint)}
+  .toolbar .op:hover,.toolbar .op:focus{border-color:var(--acc)}
+
+  /* revisiones */
+  .modal{
+    position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+    background:rgba(4,8,18,.6);backdrop-filter:blur(3px);
+  }
+  .modal.show{display:flex}
+  .modal-box{
+    width:min(680px,92vw);max-height:78vh;display:flex;flex-direction:column;
+    background:var(--panel);border:1px solid var(--line2);border-radius:14px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden;
+  }
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;letter-spacing:.3px;
+  }
+  .modal-head .x{
+    background:none;border:none;color:var(--mut);cursor:pointer;font-size:16px;line-height:1;padding:6px;
+  }
+  .modal-head .x:hover{color:var(--bad)}
+  .revlist{overflow:auto;padding:12px 16px}
+  .revhint{font-size:12px;color:var(--faint);margin:0 0 10px;line-height:1.4}
+  .revitem{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;margin-bottom:8px;
+  }
+  .revmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px}
+  .revdate{font-family:Consolas,monospace;color:var(--txt);font-weight:700}
+  .revauthor{color:var(--acc);font-weight:600}
+  .revcount{color:var(--mut)}
+  .revitem .btn{padding:6px 11px;font-size:12px}
+  .revitem .btn:hover{border-color:var(--ok);color:var(--ok)}
+  .revempty{color:var(--faint);font-size:13px;text-align:center;padding:24px 0}
+
+  /* sesión / login */
+  .userbar{
+    display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut);
+    background:var(--panel);border:1px solid var(--line);padding:7px 13px;border-radius:999px;
+  }
+  .userbar b{color:var(--acc);font-weight:700}
+  .userbar .u{color:var(--txt);font-weight:700}
+  .userbar a{color:var(--acc);cursor:pointer;text-decoration:none}
+  .userbar a:hover{text-decoration:underline}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+  .modal-box.auth{width:min(380px,92vw)}
+  .authbody{padding:18px 20px 22px}
+  .authbody label{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 5px}
+  .authbody select,.authbody input[type=password]{
+    width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:9px;padding:10px 12px;font-size:14px;outline:none;transition:.15s;
+  }
+  .authbody select:focus,.authbody input[type=password]:focus{border-color:var(--acc)}
+  .authbody .btn{width:100%;justify-content:center;margin-top:14px}
+  .authbody .btn + .btn{margin-top:8px}
+  .authlink{display:block;text-align:center;margin-top:14px;color:var(--acc);cursor:pointer;font-size:12.5px}
+  .authlink:hover{text-decoration:underline}
+  #btnReadOnly{border-color:var(--line2);color:var(--mut)}
+  #btnReadOnly:hover{border-color:var(--acc);color:var(--txt)}
 
   /* ---------- stats ---------- */
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
@@ -227,6 +292,7 @@
       </div>
     </div>
     <div class="save-ind" id="saveInd"><span class="dot"></span> Guardado automático</div>
+    <div class="userbar" id="userBar"></div>
   </header>
 
   <section class="toolbar">
@@ -251,6 +317,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimir
     </button>
+    <button class="btn" id="revBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 3"/></svg>
+      Revisiones
+    </button>
   </section>
 
   <section class="stats" id="stats"></section>
@@ -272,6 +342,46 @@
 </div>
 <div class="toast" id="toast"><span class="ok">✓</span><span id="toastMsg"></span></div>
 <div id="comboPanel" class="combo"></div>
+<div class="modal" id="revModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <b>Historial de revisiones</b>
+      <button class="x" id="revClose" title="Cerrar">✕</button>
+    </div>
+    <div class="revlist">
+      <p class="revhint">Se guarda una copia automática del backlog unos segundos después de cada cambio. Se conservan las últimas 40 revisiones. Elegí una y presioná "Restaurar" para volver a esa versión.</p>
+      <div id="revList"></div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="authModal">
+  <div class="modal-box auth">
+    <div class="modal-head"><b>Acceso al backlog</b></div>
+    <div class="authbody">
+      <div id="loginView">
+        <label>Usuario</label>
+        <select id="loginName"></select>
+        <label>Clave</label>
+        <input id="loginPin" type="password" placeholder="•••" autocomplete="off">
+        <button class="btn prim" id="btnLogin">Ingresar</button>
+        <button class="btn" id="btnReadOnly">SOLO LECTURA</button>
+        <a class="authlink" id="showChange">Cambiar mi clave</a>
+      </div>
+      <div id="changeView" style="display:none">
+        <label>Usuario</label>
+        <select id="changeName"></select>
+        <label>Clave actual</label>
+        <input id="changeCur" type="password" placeholder="•••" autocomplete="off">
+        <label>Nueva clave (solo números)</label>
+        <input id="changeNew" type="password" inputmode="numeric" placeholder="Nueva clave numérica" autocomplete="off">
+        <label>Repetir nueva clave</label>
+        <input id="changeRep" type="password" inputmode="numeric" placeholder="Repetir" autocomplete="off">
+        <button class="btn prim" id="btnChange">Guardar clave</button>
+        <a class="authlink" id="backLogin">← Volver al ingreso</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
@@ -306,12 +416,35 @@ if(RTDB_ENABLED){
 
 const DATA = [{"kind": "section", "text": "HISTORIAS DE USUARIO", "fecha": ""}, {"kind": "row", "tipo": "H", "id": "H1", "desc": "Como usuario quiero ver el mapa de estacionamientos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "MAPA INTERACTIVO CON SUCURSALES EN LANDING.JS"}, {"kind": "row", "tipo": "T", "id": "T1", "desc": "cargar mapa interactivo en la app", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "LEAFLET JS CONFIGURADO CON CAPA DARK"}, {"kind": "row", "tipo": "T", "id": "T2", "desc": "consultar lista de estacionamientos disponibles en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "API DE ESTADO DE PARKING OPERATIVA"}, {"kind": "row", "tipo": "T", "id": "T3", "desc": "mostrar iconos en el mapa con su ubicacion", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "MARCADORES EN COORDENADAS DE SEDES REALES"}, {"kind": "row", "tipo": "T", "id": "T4", "desc": "actualizar estado(libre/ocupado)en tiempo real", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "INTEGRACION CON ENDPOINT DE AFORO Y MQTT"}, {"kind": "row", "tipo": "H", "id": "H2", "desc": "Como usuario quiero filtrar estacionamientos por localidad", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T5", "desc": "Seleccionar localidad desde menu desplegabe o buscador", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T6", "desc": "Consultar estacionamientos de esa localidad en BD", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T7", "desc": "Mostrar solo esos puntos en el mapa", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T8", "desc": "Permitir cambiar localidad y refrescar resultados", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H3", "desc": "Como usuario quiero buscar estacionamientos en el mapa", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "15/06/26", "ffin": "01/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T9", "desc": "ingresar texto de busqueda(ej. ITUZAINGO)", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "15/06/26", "ffin": "01/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T10", "desc": "Validar coincidencia con localidades disponibles", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "15/06/26", "ffin": "01/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T11", "desc": "Centrar mapa en la localidad buscada", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "15/06/26", "ffin": "01/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T12", "desc": "mostrar estacionamientos cercanos", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "15/06/26", "ffin": "01/07/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H4", "desc": "Como usuario quiero ver detalles de un estacionamiento en el mapa", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "POPUPS DINAMICOS CON INFO DE SEDES EN LANDING.JS"}, {"kind": "row", "tipo": "T", "id": "T13", "desc": "seleccionar icono de estacionamiento en el mapa", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "EVENTO CLICK Y RENDERIZADO DE POPUP"}, {"kind": "row", "tipo": "T", "id": "T14", "desc": "mostar informacion: direccion. cantidad de espacios. tarifas", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "DATOS VISIBLES EN INTERFAZ DE MAPA"}, {"kind": "row", "tipo": "T", "id": "T15", "desc": "consultar disponibilidad en tiempo real", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T16", "desc": "Mostrar boton para reservar diectamente desde el mapa", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "26/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H5", "desc": "Como usuario quiero reservar una espacio desde el mapa", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "28/06/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T17", "desc": "seleccionar estacionamiento en el mapa", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "28/06/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T18", "desc": "consultar disponibilidad de espacios", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "28/06/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T19", "desc": "elegir fecha/hora y vehiculo", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "28/06/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T20", "desc": "Redirigir a flujo de pago(mercado Pago/tarjeta)", "mvp": "MVP 4", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "29/06/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T21", "desc": "Confirmar reserva y mostrar en pantalla", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "28/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H6", "desc": "Como usuario quiero listar mis vehiculos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": "MODULO VEHICLES.JS Y ARQUITECTURA DE FRONTEND MODULAR"}, {"kind": "row", "tipo": "T", "id": "T22", "desc": "consultar mi lista de vehiculos asociados en la BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T23", "desc": "mostrar en pantalla", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T24", "desc": "ordenar por patente o fecha de alta", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T25", "desc": "permitir seleccionar vehiculo principal", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H7", "desc": "Como usuario quiero dar de alta un vehiculo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "21/05/26", "ffin": "22/05/26", "obs": "FORMULARIO DE ALTA CON VALIDACION Y PERSISTENCIA"}, {"kind": "row", "tipo": "T", "id": "T26", "desc": "completar formulario con patente y datos opcionales", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T27", "desc": "Validar formato de patente", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T28", "desc": "Guardar en BD vinculado al usuario", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T29", "desc": "Confirmar alta en pantalla", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H8", "desc": "Como usuario quiero reservar una espacio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "19/05/26", "ffin": "22/05/26", "obs": "SISTEMA DE RESERVAS COMPLETO CON LAYOUT RESPONSIVO"}, {"kind": "row", "tipo": "T", "id": "T30", "desc": "seleccionar fecha y hora de reserva", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "19/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T31", "desc": "Validar disponibilidad en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "19/05/26", "ffin": "19/05/26", "obs": "REGLAS DE AFORO EN NUCLEO DEL SISTEMA"}, {"kind": "row", "tipo": "T", "id": "T32", "desc": "Asociar reserva al vehiculo elegido", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "19/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T33", "desc": "Guardar reserva en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "19/05/26", "ffin": "19/05/26", "obs": "MODELADO DE DATOS DE RESERVA MODULAR"}, {"kind": "row", "tipo": "H", "id": "H9", "desc": "Como usuario quiero pagar mi reserva", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": "SISTEMA DE PAGOS CON SALDO Y REPORTES FINANCIEROS"}, {"kind": "row", "tipo": "T", "id": "T34", "desc": "Selecionar metodo de pago(mercado pago/tarjeta)", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T35", "desc": "Redirigir a pasarela de pago segura", "mvp": "MVP 4", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "", "obs": "INTEGRACION REAL EN PLANIFICACION"}, {"kind": "row", "tipo": "T", "id": "T36", "desc": "Validar transaccion exitosa", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T37", "desc": "Guardar comprobante en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T38", "desc": "Mostrar confirmacion en pantalla", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H10", "desc": "Como usuario quiero ingresar al estacionamiento con mi patente", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "MOTOR DE RECONOCIMIENTO ALPR Y AUTOMATIZACION DE ACCESO"}, {"kind": "row", "tipo": "T", "id": "T39", "desc": "Capturar patente con camara en ingreso", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T40", "desc": "Validar contra reservas activas en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T41", "desc": "Enviar señal a barrera para abrir", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "COMANDO MQTT INTEGRADO CON ALPR"}, {"kind": "row", "tipo": "T", "id": "T42", "desc": "Registrar hora de ingreso", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H11", "desc": "Como usuario quiero egresar del estacionamiento con mi patente", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "DETECCION DE SALIDA Y LIBERACION DE PLAZA AUTOMATIZADA"}, {"kind": "row", "tipo": "T", "id": "T43", "desc": "capturar patente con camara en salida", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T44", "desc": "Validar contra reservas activas en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T45", "desc": "Enviar señal a barrera para abrir", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T46", "desc": "Registrar hora de salida y calcular tiempo de estancia", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "LOGICA DE FACTURACION POR TIEMPO REAL"}, {"kind": "row", "tipo": "H", "id": "H12", "desc": "Como usuario quiero ver mis reservas historicas", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "21/05/26", "ffin": "21/05/26", "obs": "REFINAMIENTO DE INTERFAZ DE HISTORIALES Y ESTADISTICAS"}, {"kind": "row", "tipo": "T", "id": "T47", "desc": "Consultar reservas pasadas en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "21/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T48", "desc": "Mostrar lista en pantalla", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "21/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T49", "desc": "Permitir filtrar por fecha o vehiculo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "21/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H13", "desc": "Como usuario quiero recibir notificaciones de mis reservas", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "23/05/26", "ffin": "30/05/26", "obs": "SERVICIO DE EMAIL PARA CONFIRMACION Y PASES DIGITALES"}, {"kind": "row", "tipo": "T", "id": "T50", "desc": "Enviar email con confirmacion y comprobante de pago", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "23/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T51", "desc": "Notificar recordatorio antes de la hora de ingreso", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "08/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T52", "desc": "Mostrar alertas en la app", "mvp": "MVP 4", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H22", "desc": "Como usuario quiero iniciar sesión", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "ARQUITECTURA DE SEGURIDAD JWT Y PROTECCION DE RUTAS"}, {"kind": "row", "tipo": "T", "id": "T85", "desc": "Crear pantalla login", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T86", "desc": "Validar Credenciales", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T87", "desc": "Mostrar errores", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H23", "desc": "Como usuario quiero ver espacios disponibles", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "18/05/26", "ffin": "21/05/26", "obs": "DASHBOARD DE MONITOREO DE AFORO EN TIEMPO REAL"}, {"kind": "row", "tipo": "T", "id": "T88", "desc": "mostrar espacios", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "18/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T89", "desc": "Actualizar en tiempo real", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "18/05/26", "ffin": "21/05/26", "obs": "LOGICA DE POLLING Y ACTUALIZACION SIN RECARGA"}, {"kind": "row", "tipo": "H", "id": "H24", "desc": "como usuario quiero reservar un espacio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "19/05/26", "ffin": "22/05/26", "obs": "IMPLEMENTACION DE INTERFAZ RESPONSIVA PARA RESERVAS"}, {"kind": "row", "tipo": "T", "id": "T91", "desc": "seleccionar espacio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "19/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T92", "desc": "elegir fecha y hora", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "19/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T93", "desc": "confirmar reserva", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "19/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H25", "desc": "Como usuario quiero cancelar reserva", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "19/05/26", "ffin": "22/05/26", "obs": "LOGICA DE CANCELACION Y LIBERACION DE LUGARES"}, {"kind": "row", "tipo": "T", "id": "T94", "desc": "buscar reserva", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "19/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T95", "desc": "cancelar reserva", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "19/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T96", "desc": "liberar espacio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "19/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H26", "desc": "Como usuario quiero registar ingreso", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "GESTION DE ACCESO HIBRIDO POR PATENTE Y QR"}, {"kind": "row", "tipo": "T", "id": "T97", "desc": "Registrar hora", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T98", "desc": "asignar espacio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H27", "desc": "como usuario quiero registar salida", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "EGRESO VALIDADO Y CIERRE DE LOGS"}, {"kind": "row", "tipo": "T", "id": "T99", "desc": "Registrar salida", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T100", "desc": "Liberar espacio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T101", "desc": "Calcular tiempo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H28", "desc": "Como usuario quiero ver costo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": "LOGICA DE TARIFARIO DINAMICO EN TIEMPO REAL"}, {"kind": "row", "tipo": "T", "id": "T102", "desc": "Calcular tarifa", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T103", "desc": "mostrar monto", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H29", "desc": "Como usuario quiero pagar", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": "FLUJO DE PAGO INTEGRADO CON SALDO AUTOPASS"}, {"kind": "row", "tipo": "T", "id": "T104", "desc": "selecionar medio de pago", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T105", "desc": "confirmar pago", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T106", "desc": "generar comprobante", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "section", "text": "HISTORIAS DE USUARIO ADMINISTADOR", "fecha": "18/05/26"}, {"kind": "row", "tipo": "H", "id": "H31", "desc": "Como administrador quiero ver espacios", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "21/05/26", "obs": "PANEL ADMINISTRATIVO CON VISTA EN VIVO DE OCUPACION"}, {"kind": "row", "tipo": "T", "id": "T109", "desc": "visualizar estado", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T110", "desc": "actualizar datos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H32", "desc": "Como administrador quiero registrar ingresos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "21/05/26", "obs": "ACCESO MANUAL PARA ADMINISTRADORES"}, {"kind": "row", "tipo": "T", "id": "T111", "desc": "cargar datos del vehiculo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T112", "desc": "asignar espacio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H33", "desc": "como administrador quiero asignar espacios", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "21/05/26", "obs": "GESTION DE INVENTARIO DE LUGARES"}, {"kind": "row", "tipo": "T", "id": "T113", "desc": "seleccionar espacio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T114", "desc": "confirmacion asigancion", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H34", "desc": "como administrador quiero ver ocupacion", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "21/05/26", "obs": "ESTADISTICAS Y GRAFICOS DE USO DE SEDES"}, {"kind": "row", "tipo": "T", "id": "T115", "desc": "calcular ocupacion", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "21/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T116", "desc": "mostrar datos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "21/05/26", "obs": "INTEGRACION DE GRAFICOS INTERACTIVOS"}, {"kind": "row", "tipo": "H", "id": "H36", "desc": "Como administrador quiero generar reportes", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": "SISTEMA DE EXPORTACION DE DATOS FINANCIEROS Y AUDITORIA"}, {"kind": "row", "tipo": "T", "id": "T119", "desc": "seleccionar periodo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T120", "desc": "generar reporte", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H37", "desc": "Como administador quiero ver reservas", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": "LISTADO GLOBAL DE RESERVAS PARA GESTION ADMINISTRATIVA"}, {"kind": "row", "tipo": "T", "id": "T121", "desc": "listar reservas filtrar", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T122", "desc": "filtrar", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H58", "desc": "Como administrador quiero bloquear espacios", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T123", "desc": "seleccionar espacios", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T124", "desc": "marcar como bloqueado", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H14", "desc": "Como administrador quiero loguearme en el panel de gestion", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "SISTEMA DE ROLES ADMINISTRATIVOS CON JWT"}, {"kind": "row", "tipo": "T", "id": "T53", "desc": "Ingresar credenciales de administardor", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T54", "desc": "validar contra BD con JWT", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T55", "desc": "Generar token de sesion", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T56", "desc": "Mostar acceso al dashboard", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H15", "desc": "Como administrador quiero visualizar el estado de los espacios en tiempo real", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "INTEGRACION DE PROTOCOLO MQTT PARA HARDWARE IOT"}, {"kind": "row", "tipo": "T", "id": "T57", "desc": "consultar oupacion desde sensores via MQTT", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T58", "desc": "Mostrar mapa de espacios ocupadas/libres en el dashboard", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T59", "desc": "Actualizar automaticamente cada pocos segundos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T60", "desc": "Permitir filtrar por sector o nivel", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Veronica", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H16", "desc": "Como administrador quiero gestionar las reservas de usuarios", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T61", "desc": "Consultar reservas activas en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "21/05/26", "ffin": "26/05/26", "obs": "GESTION DE RESERVAS EN DASHBOARD UNIFICADO"}, {"kind": "row", "tipo": "T", "id": "T62", "desc": "Mostrar lista con datos de usuario y vehiculo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "21/05/26", "ffin": "26/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T63", "desc": "Permitir cancelar o modificar reservas", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T64", "desc": "Registrar cambios en BD y notificar al usuario", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Diego", "finicio": "20/04/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H17", "desc": "Como administrador quiero ver el historial de ingresos y egresos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": "REPORTE DE AUDITORIA DE ACCESOS CON IMAGENES"}, {"kind": "row", "tipo": "T", "id": "T65", "desc": "Consultar registros de camaras de patente en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T66", "desc": "Mostrar lista con hora de ingreso/egreso y duracion", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T67", "desc": "Permitir exportar a CSV/Excel", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": "LOGICA DE EXPORTACION EN NUCLEO DE REPORTES"}, {"kind": "row", "tipo": "T", "id": "T68", "desc": "Filtrar por fechas o vehiculos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H18", "desc": "Como administrador quiero generar reportes de uso del estacionamiento", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": "ANALITICA AVANZADA Y AUDITORIA FINANCIERA"}, {"kind": "row", "tipo": "T", "id": "T69", "desc": "Consultar metricas de ocupacion promedio", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T70", "desc": "Calcular ingresos por reservas y pagos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T71", "desc": "Mostrar gráficos en el dashboard", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T72", "desc": "Exportar reporte en PDF/Excel", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H19", "desc": "Como administrador quiero configurar tarifas y mÃ©todos de pago", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": "PANEL DE CONFIGURACION GLOBAL DE SUCURSAL"}, {"kind": "row", "tipo": "T", "id": "T73", "desc": "Consultar tarifas actuales en BD", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T74", "desc": "Modificar valores de tarifa por hora o dí­a", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T75", "desc": "Configurar integración con Mercado Pago/tarjetas", "mvp": "MVP 4", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T76", "desc": "Guardar cambios y aplicarlos en reservas futuras", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H20", "desc": "Como administrador quiero gestionar los estacionamientos en el mapa", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/04/26", "ffin": "03/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T77", "desc": "Dar de alta un nuevo estacionamiento con ubicacion y capacidad", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/04/26", "ffin": "03/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T78", "desc": "Editar datos de estacionamientos existentes", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/04/26", "ffin": "03/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T79", "desc": "Eliminar estacionamientos obsoletos", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/04/26", "ffin": "03/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T80", "desc": "Validar cambios en BD y reflejarlos en el mapa interactivo", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Teresa", "finicio": "20/04/26", "ffin": "03/07/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H21", "desc": "Como administrador quiero recibir alertas de incidentes", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T81", "desc": "Detectar fallos en sensores o barreras", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T82", "desc": "Mostrar notificacion en el dashboard", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T83", "desc": "Registrar incidentes en BD", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T84", "desc": "Permitir marcar como resuelto", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "section", "text": "INFRAESTRUCTURA Y LOGICA DE AFORO", "fecha": "18/05/26"}, {"kind": "row", "tipo": "H", "id": "H38", "desc": "Como administrador. quiero configurar el sistema de aforo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "30/05/26", "obs": "GESTION DE CAPACIDAD DESDE PANEL DE AJUSTES"}, {"kind": "row", "tipo": "T", "id": "T127", "desc": "Setup inicial de fastapi y db sqlite con tabla parking_aforo", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "BASE DE DATOS RELACIONAL Y PERSISTENCIA"}, {"kind": "row", "tipo": "T", "id": "T128", "desc": "Crear endpoint /access/validate-plate para recibir datos del módulo alpr", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "19/05/26", "ffin": "22/05/26", "obs": "ENDPOINT DE VALIDACION PARA HARDWARE"}, {"kind": "row", "tipo": "T", "id": "T129", "desc": "Implementar script de inventario y gestión de estados de espacios", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "LOGICA DE ASIGNACION DE LUGARES"}, {"kind": "row", "tipo": "T", "id": "T130", "desc": "Integrar alpr con python (opencv/easyocr) para captura de imágenes", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "MOTOR DE OCR PARA RECONOCIMIENTO DE PATENTES"}, {"kind": "row", "tipo": "T", "id": "T131", "desc": "Configurar broker mqtt para comunicación con barreras", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "CANAL DE MENSAJERIA PARA DISPOSITIVOS IOT"}, {"kind": "section", "text": "DASHBOARD ADMINISTRATIVO", "fecha": "21/05/26"}, {"kind": "row", "tipo": "H", "id": "H39", "desc": "Como administrador. quiero ver el aforo en tiempo real", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": "MONITOREO LIVE DE ESTADO DE SEDES"}, {"kind": "row", "tipo": "T", "id": "T132", "desc": "Visualizar contador de ocupacion en tiempo real", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H40", "desc": "Como administrador. quiero consultar el log de actividad", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": "TABLA DE AUDITORIA DE ACCESOS"}, {"kind": "row", "tipo": "T", "id": "T133", "desc": "Mostrar tabla con fotos de evidencia de accesos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H41", "desc": "Como administrador. quiero controlar barreras de forma manual", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": "BOTONES DE COMANDO MQTT EN DASHBOARD"}, {"kind": "row", "tipo": "T", "id": "T134", "desc": "Implementar botones de apertura/cierre manual", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "21/05/26", "ffin": "22/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H42", "desc": "Como administrador. quiero gestionar campañas y promociones", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "22/05/26", "ffin": "30/05/26", "obs": "CRUD DE BENEFICIOS Y FIDELIZACION"}, {"kind": "row", "tipo": "T", "id": "T135", "desc": "Crud para cupones y promociones", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "22/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "section", "text": "APLICACIÓN MOVIL-USUARIO", "fecha": "20/04/26"}, {"kind": "row", "tipo": "H", "id": "H43", "desc": "Como usuario. quiero acceder a la app desde mi celular", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T136", "desc": "Setup de expo (react native) y navegación inicial", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H44", "desc": "Como usuario. quiero ver el aforo en la home", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T137", "desc": "Sincronizar contador de aforo mediante api", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H45", "desc": "Como usuario. quiero canjear puntos de fidelización", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T138", "desc": "Pantalla de canje de puntos por beneficios", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H46", "desc": "Como usuario. quiero ingresar cupones de descuento", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T139", "desc": "Modulo de ingreso y validación de códigos", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H47", "desc": "Como usuario. quiero recibir notificaciones de mi reserva", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Veronica", "finicio": "03/07/26", "ffin": "09/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T140", "desc": "Avisos de ingreso y recordatorios de salida", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Veronica", "finicio": "03/07/26", "ffin": "09/07/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H48", "desc": "Como usuario. quiero un método de contingencia si falla el alpr", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T141", "desc": "Generador de qr dinámico como plan b", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "section", "text": "HARDWARE IOT", "fecha": "18/05/26"}, {"kind": "row", "tipo": "H", "id": "H49", "desc": "Como operador. quiero que el hardware publique eventos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "COMUNICACION MQTT PARA SENSORES DE BARRERA"}, {"kind": "row", "tipo": "T", "id": "T142", "desc": "Firmware para publicación mqtt de eventos y simulación", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H50", "desc": "Como operador. quiero que el hardware responda a comandos", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "SISTEMA DE COMANDOS PUB/SUB PARA CONTROL REMOTO"}, {"kind": "row", "tipo": "T", "id": "T143", "desc": "Suscripción a comando open y control de barrera", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H51", "desc": "Como operador. quiero mostrar mensajes en pantalla local", "mvp": "MVP 4", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T144", "desc": "Ui local con lcd i2c", "mvp": "MVP 4", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H52", "desc": "Como operador. quiero evitar accidentes en la barrera", "mvp": "MVP 4", "estado": "EN CURSO", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T145", "desc": "Lógica anti-colisión con sensor de seguridad", "mvp": "MVP 4", "estado": "EN CURSO", "responsable": "Mariano", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "section", "text": "CALIDAD Y SEGURIDAD", "fecha": "18/05/26"}, {"kind": "row", "tipo": "H", "id": "H53", "desc": "Como administrador. quiero validar el flujo completo del sistema", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": "VALIDACION INTEGRAL DE FLUJO ALPR - PAGO - SALIDA"}, {"kind": "row", "tipo": "T", "id": "T146", "desc": "Prueba de flujo completo: alpr -> pago -> salida", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "20/05/26", "ffin": "30/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H54", "desc": "Como administrador. quiero probar el sistema bajo carga", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T147", "desc": "Pruebas de estrés con aforo concurrente", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H55", "desc": "Como administrador. quiero garantizar la seguridad de acceso", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": "IMPLEMENTACION DE CIFRADO Y SEGURIDAD EN API"}, {"kind": "row", "tipo": "T", "id": "T148", "desc": "Implementación de jwt y cifrado en api", "mvp": "MVP 1", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "19/05/26", "obs": ""}, {"kind": "section", "text": "DOCUMENTACIÓN", "fecha": "20/04/26"}, {"kind": "row", "tipo": "H", "id": "H56", "desc": "Documentar para el MVP1", "mvp": "MVP 1", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "20/04/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T149", "desc": "presentacion en power", "mvp": "MVP 1", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "20/04/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T150", "desc": "recopilacion de datos", "mvp": "MVP 1", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "20/04/26", "ffin": "", "obs": ""}, {"kind": "section", "text": "ENTREVISTAS", "fecha": "20/04/26"}, {"kind": "row", "tipo": "H", "id": "H57", "desc": "Entrevista con posibles clientes", "mvp": "MVP 1", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "20/04/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T151", "desc": "san juan de dios", "mvp": "MVP 1", "estado": "EN CURSO", "responsable": "Veronica", "finicio": "20/04/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T152", "desc": "estacionamiento Moron", "mvp": "MVP 1", "estado": "EN CURSO", "responsable": "Diego", "finicio": "20/04/26", "ffin": "", "obs": ""}, {"kind": "section", "text": "FUNCIONALIDADES CORE DEL SISTEMA", "fecha": ""}, {"kind": "row", "tipo": "F", "id": "F01", "desc": "ARQUITECTURA DE DATOS Y PERSISTENCIA", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Veronica", "finicio": "", "ffin": "05/06/26", "obs": "ESTRUCTURA DE MODELOS SQLALCHEMY Y MIGRACIONES"}, {"kind": "row", "tipo": "T", "id": "T168", "desc": "Diseñar el modelo relacional en SQLAlchemy", "mvp": "MVP 4", "estado": "PENDIENTE", "responsable": "Veronica", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T169", "desc": "Implementar inyeccion de dependencias para sesiones BD", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Veronica", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T170", "desc": "Desarrollo del sistema de migraciones y parches", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Veronica", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "F", "id": "F02", "desc": "MOTOR DE RECONOCIMIENTO (ALPR)", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "", "ffin": "22/04/26", "obs": "SISTEMA DE DETECCION DE PATENTES Y SCRIPTS DE ARRANQUE"}, {"kind": "row", "tipo": "T", "id": "T171", "desc": "Integracion de EasyOCR con procesamiento asincronico", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T172", "desc": "Algoritmo de consenso de patentes para validacion", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T173", "desc": "Pre-procesamiento de imagenes con OpenCV", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "F", "id": "F03", "desc": "SERVICIOS FINANCIEROS (BILLING SERVICE)", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Teresa", "finicio": "", "ffin": "05/06/26", "obs": "MODULO DE FACTURACION Y GESTION DE PUNTOS"}, {"kind": "row", "tipo": "T", "id": "T174", "desc": "Logica centralizada para calculo de deudas por estadia", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Teresa", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T174b", "desc": "Sistema de gamificacion: generacion automatica Puntos", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Teresa", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T175", "desc": "Modelado de tarifas dinamicas gestionadas desde DB", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Teresa", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "F", "id": "F04", "desc": "COMUNICACION Y CONTROL DE HARDWARE", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "", "ffin": "22/04/26", "obs": "TELEMETRIA MQTT Y COMANDOS REMOTOS PARA BARRERAS"}, {"kind": "row", "tipo": "T", "id": "T175b", "desc": "Protocolo de comunicacion MQTT para telemetria", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T175c", "desc": "Implementacion de comandos remotos (OPEN. CLOSE) via MQTT", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T175d", "desc": "Sistema de logs de eventos de hardware para auditoria", "mvp": "MVP 2", "estado": "PENDIENTE", "responsable": "Diego", "finicio": "", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "F", "id": "F05", "desc": "NUCLEO DE LA API Y SEGURIDAD", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "17/08/26", "ffin": "", "obs": "FASTAPI MODULAR CON AUTENTICACION JWT"}, {"kind": "row", "tipo": "T", "id": "T176", "desc": "Ruteo modular con FastAPI para escalabilidad", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "17/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T177", "desc": "Esquemas de validacion Pydantic para integridad", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "17/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T177b", "desc": "Sistema de autenticacion y autorizacion JWT", "mvp": "MVP 3", "estado": "PENDIENTE", "responsable": "Mariano", "finicio": "17/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "F", "id": "F06", "desc": "GESTION DE FLUJO DE VEHICULOS", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "10/08/26", "ffin": "", "obs": "CONTROL DE AFORO Y LOGICA DE ACCESOS UNIFICADA"}, {"kind": "row", "tipo": "T", "id": "T178", "desc": "Logica de vinculacion automatica Patente-Vehiculo-Usuario", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T179", "desc": "Control de aforo en tiempo real con contadores globales", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T179b", "desc": "Validacion de estados para evitar errores de registro", "mvp": "MVP 3", "estado": "EN CURSO", "responsable": "Teresa", "finicio": "10/08/26", "ffin": "", "obs": ""}, {"kind": "section", "text": "FUNCIONALIDADES INCLUIDAS MVP2", "fecha": ""}, {"kind": "row", "tipo": "H", "id": "H59", "desc": "Como administrador quiero gestionar multiples sucursales", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "18/05/26", "obs": "BRANCH ISOLATION + MULTI-PISO + AFORO INDEPENDIENTE"}, {"kind": "row", "tipo": "T", "id": "T180", "desc": "implementar branch isolation con datos separados por sucursal", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "18/05/26", "ffin": "18/05/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T181", "desc": "crear endpoint de validacion de QR en acceso", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "16/05/26", "ffin": "16/05/26", "obs": "validate_qr() + /v1/access/validate-qr"}, {"kind": "row", "tipo": "T", "id": "T182", "desc": "implementar cancelacion automatica de reservas impagas", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "16/05/26", "ffin": "16/05/26", "obs": "WORKER EN BACKGROUND CADA 5 MIN"}, {"kind": "row", "tipo": "T", "id": "T183", "desc": "soportar reservas multi-tipo: dia, semana, mes", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "11/05/26", "ffin": "11/05/26", "obs": "TARIFAS DIFERENCIADAS + AFORO DEDICADO"}, {"kind": "row", "tipo": "H", "id": "H60", "desc": "Como desarrollador quiero modularizar el frontend", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "04/06/26", "ffin": "04/06/26", "obs": "ES6 MODULES + REFACTOR DE DASHBOARD"}, {"kind": "row", "tipo": "T", "id": "T184", "desc": "refactorizar dashboard en modulos ES6 separados", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "04/06/26", "ffin": "04/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H61", "desc": "Como administrador quiero ver reportes financieros", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "05/06/26", "ffin": "05/06/26", "obs": "REPORTES CON FILTROS + EXPORTACION CSV + GRAFICOS"}, {"kind": "row", "tipo": "T", "id": "T185", "desc": "implementar reportes financieros con filtros y exportacion CSV", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "05/06/26", "ffin": "05/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H62", "desc": "Como administrador quiero configurar precios trimodales", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "17/06/26", "ffin": "17/06/26", "obs": "TARIFAS DIFERENCIADAS AUTO/MOTO/CAMIONETA"}, {"kind": "row", "tipo": "T", "id": "T186", "desc": "implementar tarifas diferenciadas por tipo de vehiculo", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "17/06/26", "ffin": "17/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H63", "desc": "Como administrador quiero ver ocupacion en tiempo real con WebSockets", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "17/06/26", "ffin": "17/06/26", "obs": "OCUPACION ACTUALIZADA AL INSTANTE"}, {"kind": "row", "tipo": "T", "id": "T187", "desc": "implementar WebSockets para actualizacion en tiempo real", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "17/06/26", "ffin": "17/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H64", "desc": "Como administrador quiero gestionar aforo inteligente", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "23/06/26", "ffin": "23/06/26", "obs": "PLAZAS FIJAS + AFORO DE PASO"}, {"kind": "row", "tipo": "T", "id": "T188", "desc": "implementar plazas fijas para periodo largo y aforo de paso", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Mariano", "finicio": "23/06/26", "ffin": "23/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H65", "desc": "Como administrador quiero recibir notificaciones in-app", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "30/06/26", "ffin": "30/06/26", "obs": "USERNOTIFICATIONSERVICE + POLLING + BADGE"}, {"kind": "row", "tipo": "T", "id": "T189", "desc": "implementar servicio de notificaciones in-app", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "30/06/26", "ffin": "30/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H66", "desc": "Como usuario quiero un tour interactivo de onboarding", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "30/06/26", "ffin": "30/06/26", "obs": "RECORRIDO GUIADO CON PASOS"}, {"kind": "row", "tipo": "T", "id": "T190", "desc": "implementar tour interactivo de onboarding", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "30/06/26", "ffin": "30/06/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H67", "desc": "Como administrador quiero usar un reloj virtual", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "02/07/26", "ffin": "02/07/26", "obs": "GETVIRTUALNOW() + INITSISTEMATIME() + TIMESERVICE.NOW()"}, {"kind": "row", "tipo": "T", "id": "T191", "desc": "implementar sistema de reloj virtual", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "02/07/26", "ffin": "02/07/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H68", "desc": "Como administrador quiero soft-delete de usuarios", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Veronica", "finicio": "02/07/26", "ffin": "02/07/26", "obs": "COLUMNA IS_DELETED + ANONIMIZACION"}, {"kind": "row", "tipo": "T", "id": "T192", "desc": "implementar soft-delete de usuarios con anonimizacion", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Veronica", "finicio": "02/07/26", "ffin": "02/07/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H69", "desc": "Como usuario quiero ver numeros con separador de miles", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "02/07/26", "ffin": "02/07/26", "obs": "FORMATNUM() CON REGEX UNIVERSAL"}, {"kind": "row", "tipo": "T", "id": "T193", "desc": "implementar separador de miles universal con formatNum()", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "02/07/26", "ffin": "02/07/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H70", "desc": "Como administrador quiero RBAC descentralizado", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "18/05/26", "ffin": "18/05/26", "obs": "ROLES ADMIN/LOCAL_ADMIN/STAFF/USER"}, {"kind": "row", "tipo": "T", "id": "T194", "desc": "implementar RBAC con aislamiento de datos por sucursal", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "18/05/26", "ffin": "18/05/26", "obs": ""}, {"kind": "row", "tipo": "H", "id": "H71", "desc": "Optimizar avisos del sistema", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "03/07/26", "ffin": "09/07/26", "obs": ""}, {"kind": "row", "tipo": "T", "id": "T195", "desc": "mejorar los avisos, dividiendolos en 3 posibles: exito / info / error", "mvp": "MVP 2", "estado": "CERRADA", "responsable": "Diego", "finicio": "03/07/26", "ffin": "09/07/26", "obs": ""}];
 const LSKEY = "backlog_autopass_v1";
+const REV_PATH = "backlog/revisions";
+const REV_LSKEY = "backlog_autopass_revisions_v1";
+const USERS_LSKEY = "backlog_autopass_users";
+const MAX_REV = 40;
 const $ = s => document.querySelector(s);
+
+const ALLOWED_USERS = ["diego","mariano","veronica","teresa"];
 
 let rows = [];
 let filters = {q:"", tipo:"", mvp:"", estado:"", resp:""};
 let saveTimer = null;
 let focusEnt = null;
+let revTimer = null;
+let session = null;
+let canEdit = false;
+
+function loadUsers(){
+  let stored = {};
+  try{ stored = JSON.parse(localStorage.getItem(USERS_LSKEY) || "{}"); }catch(e){}
+  const out = {};
+  ALLOWED_USERS.forEach(n => {
+    const pin = stored[n];
+    out[n] = (typeof pin === "string" && /^\d+$/.test(pin)) ? pin : "123";
+  });
+  return out;
+}
+function saveUsers(u){
+  try{ localStorage.setItem(USERS_LSKEY, JSON.stringify(u)); }catch(e){}
+}
 
 const RESP_COLORS = ["#38bdf8","#a78bfa","#f472b6","#fbbf24","#34d399","#fb7185","#60a5fa","#c084fc","#2dd4bf","#f97316"];
 
@@ -450,6 +583,103 @@ function persist(){
   el.classList.add("on");
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=> el.classList.remove("on"), 1200);
+  queueRevision();
+}
+
+function revRowCount(data){
+  return (data||[]).filter(r => r.kind === "row").length;
+}
+function queueRevision(){
+  clearTimeout(revTimer);
+  revTimer = setTimeout(saveRevision, 2500);
+}
+function saveRevision(){
+  if(!rows.length) return;
+  const rev = {
+    ts: Date.now(),
+    autor: (session && session.user) || "Anónimo",
+    count: revRowCount(rows),
+    data: clone(rows)
+  };
+  if(RTDB_ENABLED){
+    firebase.database().ref(REV_PATH).transaction(cur => {
+      const arr = Array.isArray(cur) ? cur : [];
+      arr.unshift(rev);
+      return arr.slice(0, MAX_REV);
+    });
+  } else {
+    try{
+      const cur = JSON.parse(localStorage.getItem(REV_LSKEY) || "[]");
+      const arr = Array.isArray(cur) ? cur : [];
+      arr.unshift(rev);
+      localStorage.setItem(REV_LSKEY, JSON.stringify(arr.slice(0, MAX_REV)));
+    }catch(e){}
+  }
+}
+function loadRevisions(cb){
+  if(RTDB_ENABLED){
+    firebase.database().ref(REV_PATH).once("value").then(snap => {
+      const v = snap.val();
+      cb(Array.isArray(v) ? v : []);
+    }).catch(() => cb([]));
+  } else {
+    try{
+      const v = JSON.parse(localStorage.getItem(REV_LSKEY) || "[]");
+      cb(Array.isArray(v) ? v : []);
+    }catch(e){ cb([]); }
+  }
+}
+function revDate(ts){
+  try{ return new Date(ts).toLocaleString("es-AR"); }
+  catch(e){ return String(ts||""); }
+}
+function openRevisions(){
+  $("#revModal").classList.add("show");
+  const list = $("#revList");
+  list.innerHTML = '<div class="revempty">Cargando…</div>';
+  loadRevisions(revs => {
+    if(!revs.length){
+      list.innerHTML = '<div class="revempty">Todavía no hay revisiones. Hacé un cambio en el backlog y se guardará una copia automática.</div>';
+      return;
+    }
+    list.innerHTML = "";
+    revs.forEach((rev, i) => {
+      const item = document.createElement("div");
+      item.className = "revitem";
+      const meta = document.createElement("div");
+      meta.className = "revmeta";
+      const d = document.createElement("span");
+      d.className = "revdate";
+      d.textContent = revDate(rev.ts);
+      const a = document.createElement("span");
+      a.className = "revauthor";
+      a.textContent = rev.autor || "Anónimo";
+      const c = document.createElement("span");
+      c.className = "revcount";
+      c.textContent = (rev.count || revRowCount(rev.data)) + " items";
+      meta.appendChild(d); meta.appendChild(a); meta.appendChild(c);
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = "Restaurar";
+      btn.disabled = !canEdit;
+      if(!canEdit) btn.title = "Ingresá para poder restaurar";
+      btn.addEventListener("click", () => restoreRevision(rev, i));
+      item.appendChild(meta); item.appendChild(btn);
+      list.appendChild(item);
+    });
+  });
+}
+function closeRevisions(){
+  $("#revModal").classList.remove("show");
+}
+function restoreRevision(rev, i){
+  if(!canEdit){ toast("Ingresá para poder restaurar"); return; }
+  if(!confirm("Restaurar la revisión del " + revDate(rev.ts) + "?\nSe reemplazará el backlog actual por esa versión.")) return;
+  rows = clone(rev.data);
+  persist();
+  render();
+  closeRevisions();
+  toast("Revisión restaurada");
 }
 function respColor(n){
   let h = 0;
@@ -522,29 +752,31 @@ function mkRow(ent){
 
   const ops = document.createElement("td");
   ops.className = "rowops";
-  const add = document.createElement("button");
-  add.className = "add";
-  add.textContent = "+";
-  add.title = "Agregar fila debajo";
-  add.addEventListener("click", e => {
-    e.stopPropagation();
-    const idx = rows.indexOf(ent);
-    const nw = {kind:"row", tipo:"T", id:"", desc:"", mvp:"MVP 1", estado:"PENDIENTE", responsable:"", finicio:"", ffin:"", obs:""};
-    rows.splice(idx + 1, 0, nw);
-    focusEnt = nw;
-    persist(); render();
-  });
-  ops.appendChild(add);
-  const del = document.createElement("button");
-  del.textContent = "✕";
-  del.title = "Eliminar fila";
-  del.addEventListener("click", e => {
-    e.stopPropagation();
-    tr.remove();
-    rows = rows.filter(r => r !== ent);
-    persist(); render();
-  });
-  ops.appendChild(del);
+  if(canEdit){
+    const add = document.createElement("button");
+    add.className = "add";
+    add.textContent = "+";
+    add.title = "Agregar fila debajo";
+    add.addEventListener("click", e => {
+      e.stopPropagation();
+      const idx = rows.indexOf(ent);
+      const nw = {kind:"row", tipo:"T", id:"", desc:"", mvp:"MVP 1", estado:"PENDIENTE", responsable:"", finicio:"", ffin:"", obs:""};
+      rows.splice(idx + 1, 0, nw);
+      focusEnt = nw;
+      persist(); render();
+    });
+    ops.appendChild(add);
+    const del = document.createElement("button");
+    del.textContent = "✕";
+    del.title = "Eliminar fila";
+    del.addEventListener("click", e => {
+      e.stopPropagation();
+      tr.remove();
+      rows = rows.filter(r => r !== ent);
+      persist(); render();
+    });
+    ops.appendChild(del);
+  }
   tr.appendChild(ops);
 
   const order = ["tipo","id","desc","mvp","estado","responsable","finicio","ffin","obs"];
@@ -557,6 +789,7 @@ function mkRow(ent){
       inp.className = "cellsel";
       inp.spellcheck = false;
       inp.autocomplete = "off";
+      inp.disabled = !canEdit;
       td.appendChild(inp);
       if(k !== "tipo"){
         const caret = document.createElement("span");
@@ -564,7 +797,7 @@ function mkRow(ent){
         caret.textContent = "▾";
         td.appendChild(caret);
       }
-    } else {
+    } else if(canEdit){
       cell(td);
     }
     tr.appendChild(td);
@@ -619,9 +852,9 @@ function build(){
         inp.addEventListener("change", () => {
           ensureOption(k, inp.value.trim());
         });
-        inp.addEventListener("focus", () => openCombo(inp, k));
-        inp.addEventListener("click", () => openCombo(inp, k));
-        td.addEventListener("click", () => openCombo(inp, k));
+        inp.addEventListener("focus", () => { if(canEdit) openCombo(inp, k); });
+        inp.addEventListener("click", () => { if(canEdit) openCombo(inp, k); });
+        td.addEventListener("click", () => { if(canEdit) openCombo(inp, k); });
         inp.addEventListener("keydown", e => {
           if(e.key === "Escape") closeCombo();
           if(e.key === "Enter" && combo){
@@ -724,6 +957,7 @@ function updateStats(){
 }
 
 function addRow(){
+  if(!canEdit){ toast("Modo solo lectura"); return; }
   const ent = {kind:"row", tipo:"T", id:"", desc:"", mvp:"MVP 1", estado:"PENDIENTE", responsable:"", finicio:"", ffin:"", obs:""};
   rows.push(ent);
   persist(); render();
@@ -777,6 +1011,113 @@ $("#fResp").addEventListener("change", e => { filters.resp = e.target.value; app
 $("#addRow").addEventListener("click", addRow);
 $("#exportCsv").addEventListener("click", exportCsv);
 $("#print").addEventListener("click", () => window.print());
+$("#revBtn").addEventListener("click", openRevisions);
+$("#revClose").addEventListener("click", closeRevisions);
+$("#revModal").addEventListener("click", e => {
+  if(e.target === $("#revModal")) closeRevisions();
+});
+function openAuthModal(){
+  $("#authModal").classList.add("show");
+}
+function closeAuthModal(){
+  $("#authModal").classList.remove("show");
+}
+function doLogin(){
+  const name = $("#loginName").value;
+  const users = loadUsers();
+  if(users[name] !== $("#loginPin").value){
+    toast("Clave incorrecta");
+    $("#loginPin").value = "";
+    return;
+  }
+  session = {user: name};
+  canEdit = true;
+  $("#loginPin").value = "";
+  closeAuthModal();
+  render();
+  renderUserBar();
+  toast("Bienvenido/a " + name);
+}
+function doReadOnly(){
+  session = null;
+  canEdit = false;
+  closeAuthModal();
+  render();
+  renderUserBar();
+  toast("Modo solo lectura");
+}
+function doLogout(){
+  session = null;
+  canEdit = false;
+  render();
+  renderUserBar();
+  openAuthModal();
+}
+function renderUserBar(){
+  $("#addRow").disabled = !canEdit;
+  const bar = $("#userBar");
+  if(canEdit && session){
+    bar.innerHTML = 'Usuario: <span class="u">' + session.user + '</span> · <a id="changePinLink">Cambiar clave</a> · <a id="logoutLink">Salir</a>';
+    $("#changePinLink").addEventListener("click", openChangeView);
+    $("#logoutLink").addEventListener("click", doLogout);
+  } else {
+    bar.innerHTML = 'Vista lectura · <a id="loginAgainLink">Ingresar</a>';
+    $("#loginAgainLink").addEventListener("click", () => openAuthModal());
+  }
+}
+function openChangeView(){
+  if(session) $("#changeName").value = session.user;
+  $("#changeCur").value = ""; $("#changeNew").value = ""; $("#changeRep").value = "";
+  $("#changeView").style.display = "block";
+  $("#loginView").style.display = "none";
+}
+function backToLogin(){
+  $("#changeView").style.display = "none";
+  $("#loginView").style.display = "block";
+}
+function doChangePin(){
+  const name = $("#changeName").value;
+  const users = loadUsers();
+  if(users[name] !== $("#changeCur").value){
+    toast("Clave actual incorrecta");
+    return;
+  }
+  const nw = $("#changeNew").value;
+  const rep = $("#changeRep").value;
+  if(!/^\d{3,}$/.test(nw)){
+    toast("La clave debe ser numérica (3 o más dígitos)");
+    return;
+  }
+  if(nw !== rep){
+    toast("Las claves nuevas no coinciden");
+    return;
+  }
+  users[name] = nw;
+  saveUsers(users);
+  toast("Clave actualizada");
+  backToLogin();
+}
+
+ALLOWED_USERS.forEach(n => {
+  const o = document.createElement("option");
+  o.value = n;
+  o.textContent = n;
+  $("#loginName").appendChild(o);
+  const o2 = document.createElement("option");
+  o2.value = n;
+  o2.textContent = n;
+  $("#changeName").appendChild(o2);
+});
+$("#btnLogin").addEventListener("click", doLogin);
+$("#btnReadOnly").addEventListener("click", doReadOnly);
+$("#showChange").addEventListener("click", openChangeView);
+$("#backLogin").addEventListener("click", backToLogin);
+$("#btnChange").addEventListener("click", doChangePin);
+$("#loginPin").addEventListener("keydown", e => { if(e.key === "Enter") doLogin(); });
+$("#loginName").addEventListener("change", () => $("#loginPin").focus());
+
+renderUserBar();
+openAuthModal();
 
 load();
 if(!RTDB_ENABLED) toast("Sin Firebase configurado — modo local (localStorage)");
