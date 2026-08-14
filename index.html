@@ -188,6 +188,12 @@
   }
   thead th:first-child{border-top-left-radius:14px}
   thead th:last-child{border-top-right-radius:14px}
+  thead th{position:relative}
+  th .resizer{
+    position:absolute;top:0;right:-3px;bottom:0;width:8px;cursor:col-resize;
+    user-select:none;z-index:6;
+  }
+  th .resizer:hover,th .resizer.active{background:var(--acc);opacity:.55}
   tbody td{padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:middle}
   tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
   tbody tr:hover td{background:rgba(223,186,107,.05)}
@@ -1181,8 +1187,79 @@ function toast(msg){
   t._t = setTimeout(()=> t.classList.remove("show"), 2000);
 }
 
+const WIDTHS_KEY = "backlog_autopass_colwidths_v1";
+let colWidths = null;
+
+function loadColWidths(){
+  try{ colWidths = JSON.parse(localStorage.getItem(WIDTHS_KEY) || "null"); }catch(e){}
+  if(!Array.isArray(colWidths)) colWidths = null;
+}
+function saveColWidths(){
+  try{ localStorage.setItem(WIDTHS_KEY, JSON.stringify(colWidths)); }catch(e){}
+}
+function setColW(el,w){
+  if(!el) return;
+  if(w){
+    el.style.width = w + "px";
+    el.style.minWidth = w + "px";
+    el.style.maxWidth = w + "px";
+  } else {
+    el.style.width = ""; el.style.minWidth = ""; el.style.maxWidth = "";
+  }
+}
+function applyColWidths(){
+  if(!colWidths) return;
+  const ths = document.querySelectorAll("#tbl thead th");
+  ths.forEach((th,i) => setColW(th, colWidths[i]));
+  document.querySelectorAll("#tbody tr").forEach(tr => {
+    const tds = tr.children;
+    colWidths.forEach((w,i) => { if(tds[i]) setColW(tds[i], w); });
+  });
+}
+function enableColResize(){
+  const ths = document.querySelectorAll("#tbl thead th");
+  ths.forEach((th,i) => {
+    const r = document.createElement("div");
+    r.className = "resizer";
+    r.title = "Arrastrá para ajustar el ancho · doble clic para auto";
+    th.appendChild(r);
+    r.addEventListener("mousedown", e => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startW = th.getBoundingClientRect().width;
+      const onMove = ev => {
+        const w = Math.max(40, startW + (ev.clientX - startX));
+        if(!colWidths) colWidths = [];
+        colWidths[i] = w;
+        applyColWidths();
+        r.classList.add("active");
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+      };
+      const onUp = () => {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        r.classList.remove("active");
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        saveColWidths();
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+    r.addEventListener("dblclick", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if(colWidths) colWidths[i] = null;
+      applyColWidths();
+      saveColWidths();
+    });
+  });
+}
+
 function render(){
   build();
+  applyColWidths();
   applyFilters();
   updateStats();
 }
@@ -1302,6 +1379,9 @@ $("#loginName").addEventListener("change", () => $("#loginPin").focus());
 
 renderUserBar();
 openAuthModal();
+loadColWidths();
+enableColResize();
+applyColWidths();
 
 load();
 if(!RTDB_ENABLED) toast("Sin Firebase configurado — modo local (localStorage)");
