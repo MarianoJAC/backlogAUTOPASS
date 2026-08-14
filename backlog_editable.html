@@ -245,6 +245,8 @@
     width:8px;height:8px;border-radius:50%;background:var(--rc,#5b6882);
   }
   td[data-key="finicio"],td[data-key="ffin"]{font-family:var(--font-mono);color:var(--mut);white-space:nowrap;font-size:12px}
+  td[data-key="comp"]{text-align:center;font-family:var(--font-mono);font-weight:700;color:var(--acc);min-width:60px;white-space:nowrap}
+  td[data-key="horas"]{text-align:center;font-family:var(--font-mono);font-weight:700;color:#38bdf8;min-width:70px;white-space:nowrap}
   td[data-key="obs"]{min-width:200px;color:var(--mut);line-height:1.4;font-size:12px}
 
   td[data-key] input.cellsel{
@@ -365,7 +367,7 @@
     <table id="tbl">
       <thead>
         <tr>
-          <th></th><th>TIPO</th><th>ID</th><th>DESCRIPCIÓN</th><th>MVP</th><th>ESTADO</th><th>RESPONSABLE</th><th>F. INICIO</th><th>F. FIN</th><th>OBSERVACIONES / ARCHIVOS</th>
+          <th></th><th>TIPO</th><th>ID</th><th>DESCRIPCIÓN</th><th>MVP</th><th>ESTADO</th><th>RESPONSABLE</th><th>COMPLEJIDAD</th><th>HORAS EST.</th><th>F. INICIO</th><th>F. FIN</th><th>OBSERVACIONES / ARCHIVOS</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -486,6 +488,33 @@ const CELL_OPTS = {
   responsable: []
 };
 const CELL_KEYS = ["tipo","mvp","estado","responsable"];
+
+const FIB_HORAS = [[1,2],[2,4],[3,8],[5,16],[8,24],[13,40],[21,56]];
+function puntosAHoras(n){
+  const v = parseFloat(String(n == null ? "" : n).replace(",", "."));
+  if(isNaN(v) || v <= 0) return "";
+  let h;
+  const last = FIB_HORAS.length - 1;
+  if(v >= FIB_HORAS[last][0]){
+    const [k1,h1] = FIB_HORAS[last-1], [k2,h2] = FIB_HORAS[last];
+    h = h2 + (v - k2) * (h2 - h1) / (k2 - k1);
+  } else {
+    for(let i = 1; i < FIB_HORAS.length; i++){
+      const [k1,h1] = FIB_HORAS[i-1], [k2,h2] = FIB_HORAS[i];
+      if(v <= k2){
+        h = v === k1 ? h1 : h1 + (v - k1) * (h2 - h1) / (k2 - k1);
+        break;
+      }
+    }
+  }
+  return (h % 1 === 0) ? h : Math.round(h);
+}
+function horasTotales(){
+  return rows.filter(r => r.kind === "row").reduce((acc, r) => {
+    const h = puntosAHoras(r.comp);
+    return acc + (h === "" ? 0 : +h);
+  }, 0);
+}
 
 function collectOptions(k){
   const set = new Set(CELL_OPTS[k] || []);
@@ -819,7 +848,7 @@ function mkRow(ent){
   const tr = document.createElement("tr");
   if(ent.kind === "section"){
     const td = document.createElement("td");
-    td.colSpan = 10;
+    td.colSpan = 12;
     tr.className = "section";
     tr.dataset.section = ent.text;
     td.title = "Click para ocultar/mostrar la sección";
@@ -892,7 +921,7 @@ function mkRow(ent){
     add.addEventListener("click", e => {
       e.stopPropagation();
       const idx = rows.indexOf(ent);
-      const nw = {kind:"row", tipo:"T", id:"", desc:"", mvp:"MVP 1", estado:"PENDIENTE", responsable:"", finicio:"", ffin:"", obs:""};
+      const nw = {kind:"row", tipo:"T", id:"", desc:"", mvp:"MVP 1", estado:"PENDIENTE", responsable:"", comp:"", finicio:"", ffin:"", obs:""};
       rows.splice(idx + 1, 0, nw);
       focusEnt = nw;
       persist(); render();
@@ -911,7 +940,7 @@ function mkRow(ent){
   }
   tr.appendChild(ops);
 
-  const order = ["tipo","id","desc","mvp","estado","responsable","finicio","ffin","obs"];
+  const order = ["tipo","id","desc","mvp","estado","responsable","comp","horas","finicio","ffin","obs"];
   order.forEach(k => {
     const td = document.createElement("td");
     if(k === "tipo") td.className = "tipo-cell";
@@ -929,7 +958,7 @@ function mkRow(ent){
         caret.textContent = "▾";
         td.appendChild(caret);
       }
-    } else if(canEdit){
+    } else if(canEdit && k !== "horas"){
       cell(td);
     }
     tr.appendChild(td);
@@ -938,6 +967,12 @@ function mkRow(ent){
 }
 
 function renderCell(td, ent, k){
+  if(k === "horas"){
+    const h = puntosAHoras(ent.comp);
+    td.textContent = h === "" ? "" : h + " hs";
+    td.dataset.val = h === "" ? "" : h;
+    return;
+  }
   const inp = td.querySelector("input.cellsel");
   if(inp) inp.value = ent[k] || "";
   else td.textContent = ent[k] || "";
@@ -965,7 +1000,7 @@ function build(){
     tr.dataset.section = prevSection || "";
     tb.appendChild(tr);
     const tds = tr.querySelectorAll("td[data-key]");
-    const order = ["tipo","id","desc","mvp","estado","responsable","finicio","ffin","obs"];
+    const order = ["tipo","id","desc","mvp","estado","responsable","comp","horas","finicio","ffin","obs"];
     order.forEach((k,i) => {
       const td = tds[i];
       renderCell(td, ent, k);
@@ -1007,6 +1042,12 @@ function build(){
           if(k==="tipo") td.dataset.tipo = v;
           if(k==="estado") td.style.setProperty("--ec", v==="CERRADA"?"#10b981":v==="EN CURSO"?"#f59e0b":v==="PENDIENTE"?"#f43f5e":"#6b7280");
           if(k==="responsable") td.style.setProperty("--rc", respColor(v));
+          if(k==="comp"){
+            const htd = td.nextElementSibling;
+            const h = puntosAHoras(v);
+            if(htd){ htd.textContent = h === "" ? "" : h + " hs"; htd.dataset.val = h === "" ? "" : h; }
+            updateStats();
+          }
           persist();
         });
       }
@@ -1093,14 +1134,15 @@ function updateStats(){
     '<div class="stat" style="--c:#3b82f6"><span class="tag">F</span><div><div class="num">'+F+'</div><div class="lbl">Funcionalidades</div></div></div>'+
     '<div class="stat" style="--c:#10b981"><span class="tag">✓</span><div><div class="num">'+cer+'</div><div class="lbl">Cerradas</div></div></div>'+
     '<div class="stat" style="--c:#f59e0b"><span class="tag">◔</span><div><div class="num">'+cur+'</div><div class="lbl">En curso</div></div></div>'+
-    '<div class="stat" style="--c:#f43f5e"><span class="tag">◷</span><div><div class="num">'+pen+'</div><div class="lbl">Pendientes</div></div></div>';
+    '<div class="stat" style="--c:#f43f5e"><span class="tag">◷</span><div><div class="num">'+pen+'</div><div class="lbl">Pendientes</div></div></div>'+
+    '<div class="stat" style="--c:#38bdf8"><span class="tag">⏱</span><div><div class="num">'+horasTotales()+'</div><div class="lbl">Horas est.</div></div></div>';
   $("#progPct").textContent = pct + " completado";
   $("#progBar").style.width = pct + "%";
 }
 
 function addRow(){
   if(!canEdit){ toast("Modo solo lectura"); return; }
-  const ent = {kind:"row", tipo:"T", id:"", desc:"", mvp:"MVP 1", estado:"PENDIENTE", responsable:"", finicio:"", ffin:"", obs:""};
+  const ent = {kind:"row", tipo:"T", id:"", desc:"", mvp:"MVP 1", estado:"PENDIENTE", responsable:"", comp:"", finicio:"", ffin:"", obs:""};
   rows.push(ent);
   persist(); render();
   const lastRow = $("#tbody").querySelector("tr:last-child");
@@ -1115,12 +1157,12 @@ function csvCell(v){
   return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
 }
 function exportCsv(){
-  let out = "\uFEFFTIPO,ID,DESCRIPCIÓN,MVP,ESTADO,RESPONSABLE,FECHA INICIO,FECHA FIN,OBSERVACIONES / ARCHIVOS RELACIONADOS\r\n";
+  let out = "\uFEFFTIPO,ID,DESCRIPCIÓN,MVP,ESTADO,RESPONSABLE,COMPLEJIDAD,HORAS EST.,FECHA INICIO,FECHA FIN,OBSERVACIONES / ARCHIVOS RELACIONADOS\r\n";
   rows.forEach(r => {
     if(r.kind === "section"){
       out += csvCell(r.text) + "\r\n";
     } else {
-      out += [r.tipo,r.id,r.desc,r.mvp,r.estado,r.responsable,r.finicio,r.ffin,r.obs].map(csvCell).join(",") + "\r\n";
+      out += [r.tipo,r.id,r.desc,r.mvp,r.estado,r.responsable,r.comp||"",puntosAHoras(r.comp),r.finicio,r.ffin,r.obs].map(csvCell).join(",") + "\r\n";
     }
   });
   const a = document.createElement("a");
