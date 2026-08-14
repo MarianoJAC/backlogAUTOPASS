@@ -470,6 +470,8 @@ let focusEnt = null;
 let revTimer = null;
 let session = null;
 let canEdit = false;
+let collapsedParents = new Set();
+let collapsedSections = new Set();
 
 function loadUsers(){
   let stored = {};
@@ -883,12 +885,16 @@ function mkRow(ent){
         if(!n.classList.contains("row-sect-hidden")){ anyShown = true; break; }
         n = n.nextElementSibling;
       }
+      const collapse = anyShown;
+      const key = tr.dataset.section;
+      if(collapse) collapsedSections.add(key);
+      else collapsedSections.delete(key);
       n = tr.nextElementSibling;
       while(n && !n.classList.contains("section")){
-        n.classList.toggle("row-sect-hidden", anyShown);
+        n.classList.toggle("row-sect-hidden", collapse);
         n = n.nextElementSibling;
       }
-      tr.classList.toggle("collapsed", anyShown);
+      tr.classList.toggle("collapsed", collapse);
     });
     return tr;
   }
@@ -898,6 +904,7 @@ function mkRow(ent){
   const isParent = (ent.kind === "row" && (ent.tipo === "H" || ent.tipo === "F"));
   if(isParent && rowHasChildren(ent)){
     tr.classList.add("parent");
+    tr.dataset.parentId = ent.id || "";
     const tg = document.createElement("button");
     tg.className = "gtoggle";
     tg.textContent = "▼";
@@ -910,12 +917,16 @@ function mkRow(ent){
         if(!n.classList.contains("child-hidden")){ anyShown = true; break; }
         n = n.nextElementSibling;
       }
+      const collapse = anyShown;
+      const pid = tr.dataset.parentId;
+      if(collapse) collapsedParents.add(pid);
+      else collapsedParents.delete(pid);
       n = tr.nextElementSibling;
       while(n && !n.classList.contains("section") && !n.classList.contains("parent")){
-        n.classList.toggle("child-hidden", anyShown);
+        n.classList.toggle("child-hidden", collapse);
         n = n.nextElementSibling;
       }
-      tr.classList.toggle("collapsed", anyShown);
+      tr.classList.toggle("collapsed", collapse);
     });
     ops.appendChild(tg);
   }
@@ -1066,10 +1077,20 @@ function build(){
   });
   refreshOptions();
   tb.querySelectorAll("tr.parent").forEach(p => {
+    if(!collapsedParents.has(p.dataset.parentId)) return;
     p.classList.add("collapsed");
     let n = p.nextElementSibling;
     while(n && !n.classList.contains("section") && !n.classList.contains("parent")){
       n.classList.add("child-hidden");
+      n = n.nextElementSibling;
+    }
+  });
+  tb.querySelectorAll("tr.section").forEach(s => {
+    if(!collapsedSections.has(s.dataset.section)) return;
+    s.classList.add("collapsed");
+    let n = s.nextElementSibling;
+    while(n && !n.classList.contains("section")){
+      n.classList.add("row-sect-hidden");
       n = n.nextElementSibling;
     }
   });
