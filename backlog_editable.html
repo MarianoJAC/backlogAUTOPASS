@@ -517,24 +517,6 @@ function puntosAHoras(n){
   }
   return (h % 1 === 0) ? h : Math.round(h);
 }
-function horasAPuntos(h){
-  h = parseFloat(h);
-  if(isNaN(h) || h <= 0) return "";
-  const last = FIB_HORAS.length - 1;
-  if(h <= FIB_HORAS[0][1]) return FIB_HORAS[0][0];
-  if(h >= FIB_HORAS[last][1]){
-    const [k1,h1] = FIB_HORAS[last-1], [k2,h2] = FIB_HORAS[last];
-    return k2 + (h - h2) * (k2 - k1) / (h2 - h1);
-  }
-  for(let i = 1; i < FIB_HORAS.length; i++){
-    const [k1,h1] = FIB_HORAS[i-1], [k2,h2] = FIB_HORAS[i];
-    if(h <= h2){
-      if(h === h1) return k1;
-      return k1 + (h - h1) * (k2 - k1) / (h2 - h1);
-    }
-  }
-  return "";
-}
 function parseDateArg(s){
   const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(String(s||"").trim());
   if(!m) return null;
@@ -548,13 +530,21 @@ function autoCalcComp(ent){
   const a = parseDateArg(ent.finicio), b = parseDateArg(ent.ffin);
   if(!a || !b || b < a) return "";
   const days = Math.round((b - a) / 86400000) + 1;
-  const p = horasAPuntos(days * 6);
-  return p === "" ? "" : String(Math.round(p * 10) / 10);
+  const h = days * 6;
+  let best = FIB_HORAS[0][0], bestDiff = Infinity;
+  FIB_HORAS.forEach(([k, hk]) => {
+    const diff = Math.abs(h - hk);
+    if(diff < bestDiff || (diff === bestDiff && k > best)){
+      bestDiff = diff;
+      best = k;
+    }
+  });
+  return String(best);
 }
 function backfillComp(){
   let changed = false;
   rows.forEach(r => {
-    if(r.kind !== "row" || String(r.comp||"").trim()) return;
+    if(r.kind !== "row") return;
     const p = autoCalcComp(r);
     if(p !== "" && p !== r.comp){ r.comp = p; changed = true; }
   });
@@ -1106,8 +1096,13 @@ function build(){
           if(k==="estado") td.style.setProperty("--ec", v==="CERRADA"?"#10b981":v==="EN CURSO"?"#f59e0b":v==="PENDIENTE"?"#f43f5e":"#6b7280");
           if(k==="responsable") td.style.setProperty("--rc", respColor(v));
           if(k==="comp"){
+            const auto = autoCalcComp(ent);
+            const comp = auto !== "" ? auto : v;
+            ent.comp = comp;
+            td.textContent = comp;
+            td.dataset.val = comp;
             const htd = td.nextElementSibling;
-            const h = puntosAHoras(v);
+            const h = puntosAHoras(comp);
             if(htd){ htd.textContent = h === "" ? "" : h + " hs"; htd.dataset.val = h === "" ? "" : h; }
             updateStats();
           }
