@@ -517,6 +517,49 @@ function puntosAHoras(n){
   }
   return (h % 1 === 0) ? h : Math.round(h);
 }
+function horasAPuntos(h){
+  h = parseFloat(h);
+  if(isNaN(h) || h <= 0) return "";
+  const last = FIB_HORAS.length - 1;
+  if(h <= FIB_HORAS[0][1]) return FIB_HORAS[0][0];
+  if(h >= FIB_HORAS[last][1]){
+    const [k1,h1] = FIB_HORAS[last-1], [k2,h2] = FIB_HORAS[last];
+    return k2 + (h - h2) * (k2 - k1) / (h2 - h1);
+  }
+  for(let i = 1; i < FIB_HORAS.length; i++){
+    const [k1,h1] = FIB_HORAS[i-1], [k2,h2] = FIB_HORAS[i];
+    if(h <= h2){
+      if(h === h1) return k1;
+      return k1 + (h - h1) * (k2 - k1) / (h2 - h1);
+    }
+  }
+  return "";
+}
+function parseDateArg(s){
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(String(s||"").trim());
+  if(!m) return null;
+  const d = +m[1], mo = +m[2], y = (+m[3] < 100 ? 2000 + +m[3] : +m[3]);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  if(dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  return dt;
+}
+function autoCalcComp(ent){
+  if(!ent) return "";
+  const a = parseDateArg(ent.finicio), b = parseDateArg(ent.ffin);
+  if(!a || !b || b < a) return "";
+  const days = Math.round((b - a) / 86400000) + 1;
+  const p = horasAPuntos(days * 6);
+  return p === "" ? "" : String(Math.round(p * 10) / 10);
+}
+function backfillComp(){
+  let changed = false;
+  rows.forEach(r => {
+    if(r.kind !== "row" || String(r.comp||"").trim()) return;
+    const p = autoCalcComp(r);
+    if(p !== "" && p !== r.comp){ r.comp = p; changed = true; }
+  });
+  return changed;
+}
 function horasTotales(){
   return rows.filter(r => r.kind === "row").reduce((acc, r) => {
     const h = puntosAHoras(r.comp);
@@ -622,6 +665,7 @@ function onData(snap){
   const val = snap.val();
   if(val === null){
     rows = clone(DATA);
+    backfillComp();
     saveToDb(rows);
     render();
     return;
@@ -629,6 +673,7 @@ function onData(snap){
   const incoming = JSON.stringify(val);
   if(incoming === JSON.stringify(rows)) return;
   rows = val;
+  if(backfillComp()) persist();
   render();
 }
 function load(){
@@ -637,6 +682,7 @@ function load(){
     db.on("value", onData);
   } else {
     rows = clone(DATA);
+    backfillComp();
     render();
   }
 }
@@ -1064,6 +1110,21 @@ function build(){
             const h = puntosAHoras(v);
             if(htd){ htd.textContent = h === "" ? "" : h + " hs"; htd.dataset.val = h === "" ? "" : h; }
             updateStats();
+          }
+          if(k==="finicio" || k==="ffin"){
+            const p = autoCalcComp(ent);
+            if(p !== ""){
+              ent.comp = p;
+              const compTd = tr.querySelector('td[data-key="comp"]');
+              if(compTd){
+                compTd.textContent = p;
+                compTd.dataset.val = p;
+                const htd = compTd.nextElementSibling;
+                const h = puntosAHoras(p);
+                if(htd){ htd.textContent = h === "" ? "" : h + " hs"; htd.dataset.val = h === "" ? "" : h; }
+              }
+              updateStats();
+            }
           }
           persist();
         });
