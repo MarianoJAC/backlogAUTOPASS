@@ -46,53 +46,53 @@
       var(--bg);
     color:var(--txt); min-height:100vh;
   }
-  .wrap{max-width:none;margin:0 auto;padding:14px 20px 20px;display:flex;flex-direction:column;height:100vh}
+  .wrap{max-width:none;margin:0 auto;padding:8px 20px 12px;display:flex;flex-direction:column;height:100vh}
 
   /* ---------- header ---------- */
-  .top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
   .brand{display:flex;align-items:center;gap:14px}
   .logo{
-    height:46px;flex:0 0 auto;object-fit:contain;
+    height:28px;flex:0 0 auto;object-fit:contain;
     filter:drop-shadow(0 0 12px rgba(223,186,107,.30));
   }
   .brand h1{
-    margin:0;font-size:22px;font-weight:800;letter-spacing:4px;
+    margin:0;font-size:15px;font-weight:800;letter-spacing:2px;
     font-family:'Montserrat',system-ui,sans-serif;color:var(--dorado);
     text-shadow:0 0 15px rgba(223,186,107,.25);
   }
 
   /* ---------- toolbar ---------- */
   .toolbar{
-    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
-    background:var(--panel);border:1px solid var(--line);border-radius:14px;
-    padding:12px;margin-bottom:16px;
+    display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:11px;
+    padding:6px 8px;margin-bottom:6px;
   }
   .search{position:relative;flex:1;min-width:220px}
   .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
   .search input{
-    width:100%;padding:9px 12px 9px 36px;background:var(--panel2);border:1px solid var(--line);
-    color:var(--txt);border-radius:9px;font-size:13px;outline:none;transition:.15s;
+    width:100%;padding:5px 10px 5px 30px;background:var(--panel2);border:1px solid var(--line);
+    color:var(--txt);border-radius:7px;font-size:12px;outline:none;transition:.15s;
   }
   .search input:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--dorado-glow)}
   .search input::placeholder{color:var(--faint)}
   .toolbar select{
     background:var(--panel2);border:1px solid var(--line);color:var(--txt);
-    border-radius:9px;padding:9px 10px;font-size:13px;outline:none;cursor:pointer;transition:.15s;
+    border-radius:7px;padding:5px 8px;font-size:12px;outline:none;cursor:pointer;transition:.15s;
   }
   .toolbar select:hover,.toolbar select:focus{border-color:var(--acc)}
   .spacer{flex:1 1 0}
   .btn{
     display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
-    color:var(--txt);border-radius:9px;padding:9px 13px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;
+    color:var(--txt);border-radius:7px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;
   }
   .btn:hover{border-color:var(--acc);color:#fff;transform:translateY(-1px)}
-  .btn svg{width:15px;height:15px}
+  .btn svg{width:13px;height:13px}
   .btn.prim{background:var(--grad);border:none;color:#0b0d10}
   .btn.prim:hover{box-shadow:0 6px 18px rgba(223,186,107,.40);filter:brightness(1.05)}
   .btn.danger:hover{border-color:var(--bad);color:var(--bad)}
   .toolbar .op{
     background:var(--panel2);border:1px solid var(--line);color:var(--txt);
-    border-radius:9px;padding:9px 10px;font-size:12.5px;outline:none;transition:.15s;width:120px;
+    border-radius:7px;padding:5px 8px;font-size:11.5px;outline:none;transition:.15s;width:120px;
   }
   .toolbar .op::placeholder{color:var(--faint)}
   .toolbar .op:hover,.toolbar .op:focus{border-color:var(--acc)}
@@ -113,7 +113,7 @@
     padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;letter-spacing:.3px;
   }
   .modal-head .x{
-    background:none;border:none;color:var(--mut);cursor:pointer;font-size:16px;line-height:1;padding:6px;
+    background:none;border:none;color:var(--mut);cursor:pointer;font-size:14px;line-height:1;padding:4px;
   }
   .modal-head .x:hover{color:var(--bad)}
   .revlist{overflow:auto;padding:12px 16px}
@@ -132,14 +132,14 @@
   .revdate{font-family:Consolas,monospace;color:var(--txt);font-weight:700}
   .revauthor{color:var(--acc);font-weight:600}
   .revcount{color:var(--mut)}
-  .revitem .btn{padding:6px 11px;font-size:12px}
+  .revitem .btn{padding:4px 9px;font-size:11.5px}
   .revitem .btn:hover{border-color:var(--ok);color:var(--ok)}
   .revempty{color:var(--faint);font-size:13px;text-align:center;padding:24px 0}
 
   /* sesión / login */
   .userbar{
-    display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut);
-    background:var(--panel);border:1px solid var(--line);padding:7px 13px;border-radius:999px;
+    display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--mut);
+    background:var(--panel);border:1px solid var(--line);padding:4px 10px;border-radius:999px;
   }
   .userbar b{color:var(--acc);font-weight:700}
   .userbar .u{color:var(--txt);font-weight:700}
@@ -162,20 +162,20 @@
   #btnReadOnly:hover{border-color:var(--acc);color:var(--txt)}
 
   /* ---------- stats ---------- */
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin-bottom:6px}
   .stat{
-    background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:12px 14px;
-    display:flex;align-items:center;justify-content:center;gap:12px;position:relative;overflow:hidden;transition:.15s;
+    background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:6px 10px;
+    display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;transition:.15s;
   }
   .stat:hover{border-color:var(--line2);transform:translateY(-1px)}
   .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--acc))}
-  .stat .num{font-size:22px;font-weight:800;line-height:1;color:var(--txt)}
-  .stat .lbl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
-  .stat .tag{font-size:15px;font-weight:800;color:var(--c)}
-  .progress{margin-bottom:16px}
-  .progress .meta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-bottom:6px}
+  .stat .num{font-size:17px;font-weight:800;line-height:1;color:var(--txt)}
+  .stat .lbl{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+  .stat .tag{font-size:13px;font-weight:800;color:var(--c)}
+  .progress{margin-bottom:6px}
+  .progress .meta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-bottom:3px}
   .progress .meta b{color:var(--txt)}
-  .bar{height:8px;background:var(--panel);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+  .bar{height:5px;background:var(--panel);border:1px solid var(--line);border-radius:99px;overflow:hidden}
   .bar i{display:block;height:100%;width:0;background:var(--grad);border-radius:99px;transition:width .5s ease}
 
   /* ---------- table ---------- */
@@ -203,8 +203,8 @@
   /* row columns */
   .rowops{width:62px;text-align:center;padding:0!important}
   .rowops button{
-    background:none;border:none;color:var(--faint);cursor:pointer;font-size:15px;line-height:1;
-    opacity:0;transition:.15s;padding:4px;
+    background:none;border:none;color:var(--faint);cursor:pointer;font-size:13px;line-height:1;
+    opacity:0;transition:.15s;padding:2px;
   }
   .rowops button + button{margin-left:2px}
   tr:hover .rowops button{opacity:1}
@@ -214,8 +214,8 @@
 
   /* agrupar tareas bajo historias/funcionalidades */
   .rowops .gtoggle{
-    background:none;border:none;color:var(--dorado);cursor:pointer;font-size:11px;line-height:1;
-    padding:4px;opacity:1;transition:transform .18s,color .15s;
+    background:none;border:none;color:var(--dorado);cursor:pointer;font-size:10px;line-height:1;
+    padding:2px;opacity:1;transition:transform .18s,color .15s;
   }
   .rowops .gtoggle:hover{color:var(--dorado-hover)}
   tr.parent.collapsed .gtoggle{transform:rotate(-90deg)}
