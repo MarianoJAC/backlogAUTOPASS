@@ -221,6 +221,8 @@
   tr.parent.collapsed .gtoggle{transform:rotate(-90deg)}
   tr.child-hidden{display:none}
   .tipo-cell{width:36px;text-align:center;font-weight:800;font-size:11px;letter-spacing:.5px}
+  .line-cell{width:46px;min-width:46px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--faint);white-space:nowrap;cursor:pointer;user-select:none}
+  .line-cell:hover{color:var(--acc);background:var(--dorado-glow)}
   .tipo-cell[data-val="H"]{color:var(--h)}
   .tipo-cell[data-val="T"]{color:var(--t)}
   .tipo-cell[data-val="F"]{color:var(--f)}
@@ -373,7 +375,7 @@
     <table id="tbl">
       <thead>
         <tr>
-          <th></th><th>TIPO</th><th>ID</th><th>DESCRIPCIÓN</th><th>MVP</th><th>ESTADO</th><th>RESPONSABLE</th><th>COMPLEJIDAD</th><th>HORAS EST.</th><th>F. INICIO</th><th>F. FIN</th><th>OBSERVACIONES / ARCHIVOS</th>
+          <th></th><th title="Número de línea · sigue al contenido (como en Excel)">#</th><th>TIPO</th><th>ID</th><th>DESCRIPCIÓN</th><th>MVP</th><th>ESTADO</th><th>RESPONSABLE</th><th>COMPLEJIDAD</th><th>HORAS EST.</th><th>F. INICIO</th><th>F. FIN</th><th>OBSERVACIONES / ARCHIVOS</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -938,11 +940,22 @@ function rowHasChildren(ent){
   return false;
 }
 
+function fallbackCopy(text, onOk){
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand("copy"); onOk(); }catch(e){}
+  document.body.removeChild(ta);
+}
+
 function mkRow(ent){
   const tr = document.createElement("tr");
   if(ent.kind === "section"){
     const td = document.createElement("td");
-    td.colSpan = 12;
+    td.colSpan = 13;
     tr.className = "section";
     tr.dataset.section = ent.text;
     td.title = "Click para ocultar/mostrar la sección";
@@ -1042,6 +1055,23 @@ function mkRow(ent){
     ops.appendChild(del);
   }
   tr.appendChild(ops);
+
+  const lineTd = document.createElement("td");
+  lineTd.className = "line-cell";
+  lineTd.title = "Número de línea (sigue al contenido, como en Excel) · clic para copiar la referencia";
+  const lineNum = rows.indexOf(ent) + 1;
+  lineTd.textContent = lineNum;
+  lineTd.addEventListener("click", e => {
+    e.stopPropagation();
+    const ref = "L#" + lineNum + (ent.id ? " (" + ent.id + ")" : "");
+    const onOk = () => showToast("Fila copiada: " + ref);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(ref).then(onOk).catch(() => fallbackCopy(ref, onOk));
+    } else {
+      fallbackCopy(ref, onOk);
+    }
+  });
+  tr.appendChild(lineTd);
 
   const order = ["tipo","id","desc","mvp","estado","responsable","comp","horas","finicio","ffin","obs"];
   order.forEach(k => {
