@@ -519,6 +519,52 @@ function puntosAHoras(n){
   }
   return (h % 1 === 0) ? h : Math.round(h);
 }
+function hoursAComp(h){
+  const hv = parseFloat(String(h == null ? "" : h).replace(",", "."));
+  if(isNaN(hv) || hv <= 0) return "";
+  let best = FIB_HORAS[0][0], bestDiff = Infinity;
+  FIB_HORAS.forEach(([k, hk]) => {
+    const diff = Math.abs(hv - hk);
+    if(diff < bestDiff || (diff === bestDiff && k > best)){
+      bestDiff = diff;
+      best = k;
+    }
+  });
+  return String(best);
+}
+function calcFechaFin(finicio, horas){
+  const a = parseDateArg(finicio);
+  const h = parseInt(String(horas == null ? "" : horas).replace(",", "."), 10);
+  if(!a || isNaN(h) || h <= 0) return "";
+  const jornadas = Math.ceil(h / 6);
+  const d = new Date(a);
+  let added = 0;
+  while(added < jornadas){
+    d.setUTCDate(d.getUTCDate() + 1);
+    const dow = d.getUTCDay();
+    if(dow !== 0 && dow !== 6) added++;
+  }
+  return pad2(d.getUTCDate()) + "/" + pad2(d.getUTCMonth() + 1) + "/" + pad2(d.getUTCFullYear() % 100);
+}
+function refreshFechas(ent, tr){
+  const comp = ent.comp;
+  const horas = puntosAHoras(comp);
+  const fFinCalc = calcFechaFin(ent.finicio, horas);
+  if(tr){
+    const htd = tr.querySelector('td[data-key="horas"]');
+    const ftd = tr.querySelector('td[data-key="ffin"]');
+    if(htd){
+      htd.textContent = horas === "" ? "" : horas + " hs";
+      htd.dataset.val = horas === "" ? "" : horas;
+    }
+    if(ftd && fFinCalc){
+      ftd.textContent = fFinCalc;
+      ftd.dataset.val = fFinCalc;
+      ent.ffin = fFinCalc;
+    }
+  }
+  return horas;
+}
 function parseDateArg(s){
   const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(String(s||"").trim());
   if(!m) return null;
@@ -561,18 +607,12 @@ function commitDateCell(td, k, ent){
     ent[k] = v;
     td.dataset.val = v;
     const tr = td.closest("tr");
-    const p = autoCalcComp(ent);
-    if(p !== ""){
-      ent.comp = p;
-      const compTd = tr ? tr.querySelector('td[data-key="comp"]') : null;
-      if(compTd){
-        compTd.textContent = p;
-        compTd.dataset.val = p;
-        const htd = compTd.nextElementSibling;
-        const h = puntosAHoras(p);
-        if(htd){ htd.textContent = h === "" ? "" : h + " hs"; htd.dataset.val = h === "" ? "" : h; }
-      }
-      updateStats();
+    if(k === "finicio"){
+      const horas = refreshFechas(ent, tr);
+      if(horas !== "") updateStats();
+    } else if(k === "ffin"){
+      const horas = puntosAHoras(ent.comp);
+      if(horas !== "") updateStats();
     }
     persist();
   }
@@ -597,8 +637,10 @@ function backfillComp(){
   let changed = false;
   rows.forEach(r => {
     if(r.kind !== "row") return;
-    const p = autoCalcComp(r);
-    if(p !== "" && p !== r.comp){ r.comp = p; changed = true; }
+    const h = puntosAHoras(r.comp);
+    if(h === "") return;
+    const ff = calcFechaFin(r.finicio, h);
+    if(ff && r.ffin !== ff){ r.ffin = ff; changed = true; }
   });
   return changed;
 }
@@ -1092,7 +1134,7 @@ function mkRow(ent){
         caret.textContent = "▾";
         td.appendChild(caret);
       }
-    } else if(canEdit && k !== "horas"){
+    } else if(canEdit){
       cell(td);
     }
     tr.appendChild(td);
@@ -1177,30 +1219,37 @@ function build(){
           if(k==="estado") td.style.setProperty("--ec", v==="CERRADA"?"#10b981":v==="EN CURSO"?"#f59e0b":v==="PENDIENTE"?"#f43f5e":"#6b7280");
           if(k==="responsable") td.style.setProperty("--rc", respColor(v));
           if(k==="comp"){
-            const auto = autoCalcComp(ent);
-            const comp = auto !== "" ? auto : v;
+            const comp = v;
             ent.comp = comp;
             td.textContent = comp;
             td.dataset.val = comp;
-            const htd = td.nextElementSibling;
-            const h = puntosAHoras(comp);
-            if(htd){ htd.textContent = h === "" ? "" : h + " hs"; htd.dataset.val = h === "" ? "" : h; }
+            const horas = refreshFechas(ent, tr);
+            if(horas !== "") updateStats();
+          }
+          if(k==="horas"){
+            const comp = hoursAComp(v);
+            if(comp !== "" && comp !== ent.comp){
+              ent.comp = comp;
+              const compTd = tr.querySelector('td[data-key="comp"]');
+              if(compTd){ compTd.textContent = comp; compTd.dataset.val = comp; }
+            }
+            const h = puntosAHoras(ent.comp);
+            td.textContent = h === "" ? "" : h + " hs";
+            td.dataset.val = h === "" ? "" : h;
+            const fFinCalc = calcFechaFin(ent.finicio, h);
+            if(fFinCalc){
+              const ftd = tr.querySelector('td[data-key="ffin"]');
+              if(ftd){ ftd.textContent = fFinCalc; ftd.dataset.val = fFinCalc; ent.ffin = fFinCalc; }
+            }
             updateStats();
           }
-          if(k==="finicio" || k==="ffin"){
-            const p = autoCalcComp(ent);
-            if(p !== ""){
-              ent.comp = p;
-              const compTd = tr.querySelector('td[data-key="comp"]');
-              if(compTd){
-                compTd.textContent = p;
-                compTd.dataset.val = p;
-                const htd = compTd.nextElementSibling;
-                const h = puntosAHoras(p);
-                if(htd){ htd.textContent = h === "" ? "" : h + " hs"; htd.dataset.val = h === "" ? "" : h; }
-              }
-              updateStats();
-            }
+          if(k==="finicio"){
+            const horas = refreshFechas(ent, tr);
+            if(horas !== "") updateStats();
+          }
+          if(k==="ffin"){
+            const h = puntosAHoras(ent.comp);
+            if(h !== "") updateStats();
           }
           persist();
         });
