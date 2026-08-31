@@ -519,19 +519,6 @@ function puntosAHoras(n){
   }
   return (h % 1 === 0) ? h : Math.round(h);
 }
-function hoursAComp(h){
-  const hv = parseFloat(String(h == null ? "" : h).replace(",", "."));
-  if(isNaN(hv) || hv <= 0) return "";
-  let best = FIB_HORAS[0][0], bestDiff = Infinity;
-  FIB_HORAS.forEach(([k, hk]) => {
-    const diff = Math.abs(hv - hk);
-    if(diff < bestDiff || (diff === bestDiff && k > best)){
-      bestDiff = diff;
-      best = k;
-    }
-  });
-  return String(best);
-}
 function calcFechaFin(finicio, horas){
   const a = parseDateArg(finicio);
   const h = parseInt(String(horas == null ? "" : horas).replace(",", "."), 10);
@@ -616,22 +603,6 @@ function commitDateCell(td, k, ent){
     }
     persist();
   }
-}
-function autoCalcComp(ent){
-  if(!ent) return "";
-  const a = parseDateArg(ent.finicio), b = parseDateArg(ent.ffin);
-  if(!a || !b || b < a) return "";
-  const days = Math.round((b - a) / 86400000) + 1;
-  const h = days * 6;
-  let best = FIB_HORAS[0][0], bestDiff = Infinity;
-  FIB_HORAS.forEach(([k, hk]) => {
-    const diff = Math.abs(h - hk);
-    if(diff < bestDiff || (diff === bestDiff && k > best)){
-      bestDiff = diff;
-      best = k;
-    }
-  });
-  return String(best);
 }
 function backfillComp(){
   let changed = false;
@@ -1233,20 +1204,13 @@ function build(){
             if(horas !== "") updateStats();
           }
           if(k==="horas"){
-            const comp = hoursAComp(v);
-            if(comp !== "" && comp !== ent.comp){
-              ent.comp = comp;
-              const compTd = tr.querySelector('td[data-key="comp"]');
-              if(compTd){ compTd.textContent = comp; compTd.dataset.val = comp; }
-            }
-            const h = puntosAHoras(ent.comp);
-            td.textContent = h === "" ? "" : h + " hs";
-            td.dataset.val = h === "" ? "" : h;
+            const h = v;
+            td.dataset.val = h;
             const fFinCalc = calcFechaFin(ent.finicio, h);
-            if(fFinCalc){
-              const ftd = tr.querySelector('td[data-key="ffin"]');
-              if(ftd){ ftd.textContent = fFinCalc; ftd.dataset.val = fFinCalc; ent.ffin = fFinCalc; }
-            }
+            const ftd = tr.querySelector('td[data-key="ffin"]');
+            const disp = fFinCalc || "";
+            if(ftd){ ftd.textContent = disp; ftd.dataset.val = disp; }
+            if(fFinCalc){ ent.ffin = fFinCalc; }
             updateStats();
           }
           if(k==="finicio"){
