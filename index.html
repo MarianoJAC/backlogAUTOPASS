@@ -296,7 +296,7 @@
   .toast{
     position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);background:var(--panel3);
     border:1px solid var(--acc);color:var(--txt);padding:12px 20px;border-radius:11px;font-size:13px;
-    opacity:0;transition:.3s;pointer-events:none;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4);
+    opacity:0;transition:.3s;pointer-events:none;z-index:500;box-shadow:0 10px 30px rgba(0,0,0,.4);
     display:flex;align-items:center;gap:9px;
   }
   .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -461,6 +461,7 @@ const LSKEY = "backlog_autopass_v1";
 const REV_PATH = "backlog/revisions";
 const REV_LSKEY = "backlog_autopass_revisions_v1";
 const USERS_LSKEY = "backlog_autopass_users";
+const USERS_PATH = "backlog/users";
 const MAX_REV = 40;
 const $ = s => document.querySelector(s);
 
@@ -475,7 +476,28 @@ let canEdit = false;
 let collapsedParents = new Set();
 let collapsedSections = new Set();
 
-function loadUsers(){
+function loadUsers(cb){
+  if(!RTDB_ENABLED){
+    cb(readLocalUsers());
+    return;
+  }
+  firebase.database().ref(USERS_PATH).once("value").then(snap => {
+    const remote = snap.val() || {};
+    if(Object.keys(remote).length === 0){
+      const local = readLocalUsers();
+      saveUsers(local);
+      cb(local);
+      return;
+    }
+    const out = {};
+    ALLOWED_USERS.forEach(n => {
+      const pin = remote[n];
+      out[n] = (typeof pin === "string" && /^\d+$/.test(pin)) ? pin : "123";
+    });
+    cb(out);
+  }).catch(() => cb(readLocalUsers()));
+}
+function readLocalUsers(){
   let stored = {};
   try{ stored = JSON.parse(localStorage.getItem(USERS_LSKEY) || "{}"); }catch(e){}
   const out = {};
@@ -486,6 +508,9 @@ function loadUsers(){
   return out;
 }
 function saveUsers(u){
+  if(RTDB_ENABLED){
+    firebase.database().ref(USERS_PATH).set(u);
+  }
   try{ localStorage.setItem(USERS_LSKEY, JSON.stringify(u)); }catch(e){}
 }
 
@@ -1477,19 +1502,20 @@ function closeAuthModal(){
 }
 function doLogin(){
   const name = $("#loginName").value;
-  const users = loadUsers();
-  if(users[name] !== $("#loginPin").value){
-    toast("Clave incorrecta");
+  loadUsers(users => {
+    if(users[name] !== $("#loginPin").value){
+      toast("Clave incorrecta");
+      $("#loginPin").value = "";
+      return;
+    }
+    session = {user: name};
+    canEdit = true;
     $("#loginPin").value = "";
-    return;
-  }
-  session = {user: name};
-  canEdit = true;
-  $("#loginPin").value = "";
-  closeAuthModal();
-  render();
-  renderUserBar();
-  toast("Bienvenido/a " + name);
+    closeAuthModal();
+    render();
+    renderUserBar();
+    toast("Bienvenido/a " + name);
+  });
 }
 function doReadOnly(){
   session = null;
@@ -1530,25 +1556,26 @@ function backToLogin(){
 }
 function doChangePin(){
   const name = $("#changeName").value;
-  const users = loadUsers();
-  if(users[name] !== $("#changeCur").value){
-    toast("Clave actual incorrecta");
-    return;
-  }
-  const nw = $("#changeNew").value;
-  const rep = $("#changeRep").value;
-  if(!/^\d{3,}$/.test(nw)){
-    toast("La clave debe ser numérica (3 o más dígitos)");
-    return;
-  }
-  if(nw !== rep){
-    toast("Las claves nuevas no coinciden");
-    return;
-  }
-  users[name] = nw;
-  saveUsers(users);
-  toast("Clave actualizada");
-  backToLogin();
+  loadUsers(users => {
+    if(users[name] !== $("#changeCur").value){
+      toast("Clave actual incorrecta");
+      return;
+    }
+    const nw = $("#changeNew").value;
+    const rep = $("#changeRep").value;
+    if(!/^\d{3,}$/.test(nw)){
+      toast("La clave debe ser numérica (3 o más dígitos)");
+      return;
+    }
+    if(nw !== rep){
+      toast("Las claves nuevas no coinciden");
+      return;
+    }
+    users[name] = nw;
+    saveUsers(users);
+    toast("Clave actualizada");
+    backToLogin();
+  });
 }
 
 ALLOWED_USERS.forEach(n => {
