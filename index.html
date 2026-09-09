@@ -734,7 +734,6 @@ function onData(snap){
   if(incoming === JSON.stringify(rows)) return;
   if(cellBeingEdited()) return;
   rows = val;
-  if(backfillComp()) persist();
   render();
 }
 function load(){
