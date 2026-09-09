@@ -1329,6 +1329,29 @@ function fillFilters(){
   fillSel($("#fEstado"), new Set(collectOptions("estado")), filters.estado);
   fillSel($("#fResp"), new Set(collectOptions("responsable")), filters.resp);
 }
+function filterKey(){
+  return "backlog_autopass_filters_" + ((session && session.user) ? session.user : "anon");
+}
+function persistFilters(){
+  try{ localStorage.setItem(filterKey(), JSON.stringify(filters)); }catch(e){}
+}
+function restoreFilters(name){
+  if(RTDB_ENABLED && !name) return;
+  let f = {q:"", tipo:"", mvp:"", estado:"", resp:""};
+  try{
+    const stored = JSON.parse(localStorage.getItem("backlog_autopass_filters_" + (name || "anon")) || "{}");
+    if(typeof stored === "object" && stored){
+      ["q","tipo","mvp","estado","resp"].forEach(k => {
+        if(typeof stored[k] === "string") f[k] = stored[k];
+      });
+    }
+  }catch(e){}
+  filters = f;
+  const q = $("#q");
+  if(q) q.value = f.q;
+  fillFilters();
+  applyFilters();
+}
 function fillSel(sel, set, keep){
   const labels = {fTipo:"Tipo: todos", fMvp:"MVP: todos", fEstado:"Estado: todos", fResp:"Responsable: todos"};
   sel.innerHTML = '<option value="">'+labels[sel.id]+'</option>';
@@ -1481,11 +1504,11 @@ function render(){
   updateStats();
 }
 
-$("#q").addEventListener("input", e => { filters.q = e.target.value; applyFilters(); });
-$("#fTipo").addEventListener("change", e => { filters.tipo = e.target.value; applyFilters(); });
-$("#fMvp").addEventListener("change", e => { filters.mvp = e.target.value; applyFilters(); });
-$("#fEstado").addEventListener("change", e => { filters.estado = e.target.value; applyFilters(); });
-$("#fResp").addEventListener("change", e => { filters.resp = e.target.value; applyFilters(); });
+$("#q").addEventListener("input", e => { filters.q = e.target.value; applyFilters(); persistFilters(); });
+$("#fTipo").addEventListener("change", e => { filters.tipo = e.target.value; applyFilters(); persistFilters(); });
+$("#fMvp").addEventListener("change", e => { filters.mvp = e.target.value; applyFilters(); persistFilters(); });
+$("#fEstado").addEventListener("change", e => { filters.estado = e.target.value; applyFilters(); persistFilters(); });
+$("#fResp").addEventListener("change", e => { filters.resp = e.target.value; applyFilters(); persistFilters(); });
 $("#addRow").addEventListener("click", addRow);
 $("#exportCsv").addEventListener("click", exportCsv);
 $("#print").addEventListener("click", () => window.print());
@@ -1514,6 +1537,7 @@ function doLogin(){
     closeAuthModal();
     render();
     renderUserBar();
+    restoreFilters(name);
     toast("Bienvenido/a " + name);
   });
 }
